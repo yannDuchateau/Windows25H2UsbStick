@@ -1,5 +1,5 @@
 
-@echo off & mode con cols=75 lines=6 & Title Fin tests et copie scipts
+@echo off & mode con cols=75 lines=6 & Title Windows 11 25h2 Install from USB Stick
 ::—————————————————————————————————————————————————————————————————————————————————————
 :diskusb
 IF EXIST c:\addons\pdfcreator.inf SET CLEFUSB=c:
