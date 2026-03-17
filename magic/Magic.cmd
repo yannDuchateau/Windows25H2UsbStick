@@ -172,17 +172,17 @@ dism /Online /Disable-Feature /FeatureName:"Printing-XPSServices-Features" /NoRe
 DISM /Online /Disable-Feature /FeatureName:"Printing-Foundation-LPRPortMonitor" /NoRestart >>%loag%
 DISM /Online /Disable-Feature /FeatureName:"RasCMAK.Client~~~~0.0.1.0" /NoRestart >>%loag%
 DISM /Online /Disable-Feature /FeatureName:"SNMP.Client~~~~0.0.1.0" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"WMI-SNMP-Provider.Client~~~~0.0.1.0" /NoRestart >>%loag%
+DISM /Online /Disable-Feature /FeatureName:"WMI-SNMP-Provider.Client~~~~0.0.1.0" /NoRestart>>%loag%
 sc stop "WSearch"
 sc config "WSearch" start="auto"
-Dism /online /Enable-Feature /FeatureName:"SearchEngine-Client-Package" /NoRestart >>%loag%
+Dism /online /Enable-Feature /FeatureName:"SearchEngine-Client-Package" /NoRestart>>%loag%
 sc start "WSearch"
-dism /Online /Disable-Feature /FeatureName:"TelnetClient" /NoRestart >>%loag%
-dism /Online /Disable-Feature /FeatureName:"TFTP" /NoRestart >>%loag%
-dism /Online /Disable-Feature /FeatureName:"TIFFIFilter" /NoRestart >>%loag%
-dism /Online /Disable-Feature /FeatureName:"WorkFolders-Client" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Xps-Foundation-Xps-Viewer" /NoRestart >>%loag%
-DISM /online /get-features /format:table | more >>%PUBLIC%\Desktop\loag\Features%nom_fichier%.txt
+dism /Online /Disable-Feature /FeatureName:"TelnetClient" /NoRestart>>%loag%
+dism /Online /Disable-Feature /FeatureName:"TFTP" /NoRestart>>%loag%
+dism /Online /Disable-Feature /FeatureName:"TIFFIFilter" /NoRestart>>%loag%
+dism /Online /Disable-Feature /FeatureName:"WorkFolders-Client" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Xps-Foundation-Xps-Viewer" /NoRestart>>%loag%
+DISM /online /get-features /format:table | more>>%PUBLIC%\Desktop\loag\Features%nom_fichier%.txt
 DISM /Online /Get-Features >>%PUBLIC%\Desktop\loag\Features%nom_fichier%.txt
 DISM /Online /Get-Capabilities >>%PUBLIC%\Desktop\loag\Features%nom_fichier%.txt
 
@@ -296,7 +296,7 @@ netsh advfirewall firewall add rule name="WRT DNS" dir=out action=allow protocol
 schtasks /Change /TN "Microsoft\Windows\Windows Error Reporting\QueueReporting" /Disable
 
 
-echo Repair WinRm  >>%loag%
+echo Repair WinRm>>%loag%
 rem Enable WinRm
 reg add HKLM\SYSTEM\CurrentControlSet\Services\RemoteRegistry" /v "Start" /t REG_DWORD /d "3" /f
 reg add HKLM\SYSTEM\CurrentControlSet\Services\SNMPTRAP" /v "Start" /t REG_DWORD /d "3" /f
@@ -337,69 +337,69 @@ sc config VSS start= auto
 
 TITLE Windows 11 %SETOS% 25h2 Install from USB Stick on %CLEFUSB% - Configuring Time and Language
 
-echo ----------------------------------- Time and language ---------------------------------- >>%loag%
-echo ..................................... Date and time .................................... >>%loag%
+echo ----------------------------------- Time and language ---------------------------------->>%loag%
+echo ..................................... Date and time ....................................>>%loag%
 
 echo Time Zone - Western Europe Standard Time
 tzutil /s "W. Europe Standard Time" >>%loag%
 
-echo ..................................... Regional Settings ................................. >>%loag%
+echo ..................................... Regional Settings .................................>>%loag%
 
 rem 244 - Set Location to United States
-rem reg add "HKCU\Control Panel\International\User Profile\en-US" /v "0409:00000409" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International\Geo" /v "Name" /t REG_SZ /d "US" /f >>%loag%
-rem reg add "HKCU\Control Panel\International\Geo" /v "Nation" /t REG_SZ /d "244" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iCountry" /t REG_SZ /d "36" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "Locale" /t REG_SZ /d "00000409" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "LocaleName" /t REG_SZ /d "en-US" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sCurrency" /t REG_SZ /d "USD" /f >>%loag%
-reg add "HKCU\Control Panel\International\🌎🌏🌍" /v "Calendar" /t REG_SZ /d "Gregorian" /f >>%loag%
+rem reg add "HKCU\Control Panel\International\User Profile\en-US" /v "0409:00000409" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International\Geo" /v "Name" /t REG_SZ /d "US" /f>>%loag%
+rem reg add "HKCU\Control Panel\International\Geo" /v "Nation" /t REG_SZ /d "244" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iCountry" /t REG_SZ /d "36" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "Locale" /t REG_SZ /d "00000409" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "LocaleName" /t REG_SZ /d "en-US" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sCurrency" /t REG_SZ /d "USD" /f>>%loag%
+reg add "HKCU\Control Panel\International\🌎🌏🌍" /v "Calendar" /t REG_SZ /d "Gregorian" /f>>%loag%
 
 rem Set device setup region to Switzerland (GeoID 223)
-reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" /v DeviceRegion /t REG_DWORD /d 223 /f >>%loag%
-reg add "HKCU\Control Panel\International\User Profile\de-CH" /v "0807:00000807" /t REG_SZ /d "1" /f >>%loag%
-reg add "HKCU\Control Panel\International\User Profile" /v "Languages" /t REG_SZ /d "de-CH" /f >>%loag%
-reg add "HKCU\Control Panel\International\Geo" /v "Name" /t REG_SZ /d "CH" /f >>%loag%
-reg add "HKCU\Control Panel\International\Geo" /v "Nation" /t REG_SZ /d "223" /f >>%loag%
-reg add "HKCU\Control Panel\International" /v "iCountry" /t REG_SZ /d "41" /f >>%loag%
-reg add "HKCU\Control Panel\International" /v "Locale" /t REG_SZ /d "00000807" /f >>%loag%
-reg add "HKCU\Control Panel\International" /v "LocaleName" /t REG_SZ /d "de-CH" /f >>%loag%
-reg add "HKCU\Control Panel\International" /v "sCurrency" /t REG_SZ /d "CHF" /f >>%loag%
-rem reg add "HKCU\Control Panel\International\🌎🌏🌍" /v "Calendar" /t REG_SZ /d "Gregorian" /f >>%loag%
+reg.exe ADD "HKLM\mount\Microsoft\Windows\CurrentVersion\Control Panel\DeviceRegion" /v DeviceRegion /t REG_DWORD /d 223 /f>>%loag%
+reg add "HKCU\Control Panel\International\User Profile\de-CH" /v "0807:00000807" /t REG_SZ /d "1" /f>>%loag%
+reg add "HKCU\Control Panel\International\User Profile" /v "Languages" /t REG_SZ /d "de-CH" /f>>%loag%
+reg add "HKCU\Control Panel\International\Geo" /v "Name" /t REG_SZ /d "CH" /f>>%loag%
+reg add "HKCU\Control Panel\International\Geo" /v "Nation" /t REG_SZ /d "223" /f>>%loag%
+reg add "HKCU\Control Panel\International" /v "iCountry" /t REG_SZ /d "41" /f>>%loag%
+reg add "HKCU\Control Panel\International" /v "Locale" /t REG_SZ /d "00000807" /f>>%loag%
+reg add "HKCU\Control Panel\International" /v "LocaleName" /t REG_SZ /d "de-CH" /f>>%loag%
+reg add "HKCU\Control Panel\International" /v "sCurrency" /t REG_SZ /d "CHF" /f>>%loag%
+rem reg add "HKCU\Control Panel\International\🌎🌏🌍" /v "Calendar" /t REG_SZ /d "Gregorian" /f>>%loag%
 
-echo . . . . . . . . . . . . Additional date, time, and regional settings . . . . . . . . . . . >>%loag%
+echo . . . . . . . . . . . . Additional date, time, and regional settings . . . . . . . . . . .>>%loag%
 
 rem Set Formats to Metric
-rem reg add "HKCU\Control Panel\International" /v "iDigits" /t REG_SZ /d "2" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iLZero" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iMeasure" /t REG_SZ /d "0" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iNegNumber" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iPaperSize" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iTLZero" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sDecimal" /t REG_SZ /d "," /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sNativeDigits" /t REG_SZ /d "0123456789" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sNegativeSign" /t REG_SZ /d "-" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sPositiveSign" /t REG_SZ /d "" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "NumShape" /t REG_SZ /d "1" /f >>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iDigits" /t REG_SZ /d "2" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iLZero" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iMeasure" /t REG_SZ /d "0" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iNegNumber" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iPaperSize" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iTLZero" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sDecimal" /t REG_SZ /d "," /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sNativeDigits" /t REG_SZ /d "0123456789" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sNegativeSign" /t REG_SZ /d "-" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sPositiveSign" /t REG_SZ /d "" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "NumShape" /t REG_SZ /d "1" /f>>%loag%
 
 rem Set Time to 24h / Monday
-rem reg add "HKCU\Control Panel\International" /v "iCalendarType" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iDate" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iFirstDayOfWeek" /t REG_SZ /d "0" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iFirstWeekOfYear" /t REG_SZ /d "0" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iTime" /t REG_SZ /d "1" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "iTimePrefix" /t REG_SZ /d "0" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sDate" /t REG_SZ /d "-" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sList" /t REG_SZ /d "," /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sLongDate" /t REG_SZ /d "d MMMM, yyyy" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sMonDecimalSep" /t REG_SZ /d "." /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sMonGrouping" /t REG_SZ /d "3;0" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sMonThousandSep" /t REG_SZ /d "," /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sShortDate" /t REG_SZ /d "dd-MMM-yy" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sTime" /t REG_SZ /d ":" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sTimeFormat" /t REG_SZ /d "HH:mm:ss" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sShortTime" /t REG_SZ /d "HH:mm" /f >>%loag%
-rem reg add "HKCU\Control Panel\International" /v "sYearMonth" /t REG_SZ /d "MMMM yyyy" /f >>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iCalendarType" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iDate" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iFirstDayOfWeek" /t REG_SZ /d "0" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iFirstWeekOfYear" /t REG_SZ /d "0" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iTime" /t REG_SZ /d "1" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "iTimePrefix" /t REG_SZ /d "0" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sDate" /t REG_SZ /d "-" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sList" /t REG_SZ /d "," /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sLongDate" /t REG_SZ /d "d MMMM, yyyy" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sMonDecimalSep" /t REG_SZ /d "." /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sMonGrouping" /t REG_SZ /d "3;0" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sMonThousandSep" /t REG_SZ /d "," /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sShortDate" /t REG_SZ /d "dd-MMM-yy" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sTime" /t REG_SZ /d ":" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sTimeFormat" /t REG_SZ /d "HH:mm:ss" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sShortTime" /t REG_SZ /d "HH:mm" /f>>%loag%
+rem reg add "HKCU\Control Panel\International" /v "sYearMonth" /t REG_SZ /d "MMMM yyyy" /f>>%loag%
 
 
 rem Enable IPv6
@@ -415,47 +415,47 @@ schtasks /Change /TN "Microsoft\XblGameSave\XblGameSaveTask" /Disable
 
 TITLE Windows 11 %SETOS% 25h2 Install from USB Stick on %CLEFUSB% - Configuring Windows Update
 
-echo =============================== Windows update Settings ================================ >>%loag%
-Echo ----------------------------------- Update and security -------------------------------- >>%loag%
-Echo ........................................ Backup ........................................ >>%loag%
+echo =============================== Windows update Settings ================================>>%loag%
+Echo ----------------------------------- Update and security -------------------------------->>%loag%
+Echo ........................................ Backup ........................................>>%loag%
 
-rem 1 - Disable File History (Creating previous versions of files/Windows Backup) >>%loag%
+rem 1 - Disable File History (Creating previous versions of files/Windows Backup)>>%loag%
 
-echo ==================================== Windows Shell ===================================== >>%loag%
-echo Add Reset permissions to Shell/Manually Reset permissions/Take Ownership >>%loag%
+echo ==================================== Windows Shell =====================================>>%loag%
+echo Add Reset permissions to Shell/Manually Reset permissions/Take Ownership>>%loag%
 rem http://lallouslab.net/2013/08/26/resetting-ntfs-files-permission-in-windows-graphical-utility
 
-echo Take Ownership >>%loag%
-echo Add "Take Ownership" Option in Files and Folders Context Menu in Windows >>%loag%
-reg add "HKCR\*\shell\runas" /ve /t REG_SZ /d "Take ownership" /f >>%loag%
-reg add "HKCR\*\shell\runas" /v "HasLUAShield" /t REG_SZ /d "" /f >>%loag%
-reg add "HKCR\*\shell\runas" /v "NoWorkingDirectory" /t REG_SZ /d "" /f >>%loag%
-reg add "HKCR\*\shell\runas\command" /ve /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" && icacls \"%%1\" /grant administrators:F" /f >>%loag%
-reg add "HKCR\*\shell\runas\command" /v "IsolatedCommand" /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" && icacls \"%%1\" /grant administrators:F" /f >>%loag%
-reg add "HKCR\Directory\shell\runas" /ve /t REG_SZ /d "Take ownership" /f >>%loag%
-reg add "HKCR\Directory\shell\runas" /v "HasLUAShield" /t REG_SZ /d "" /f >>%loag%
-reg add "HKCR\Directory\shell\runas" /v "NoWorkingDirectory" /t REG_SZ /d "" /f >>%loag%
-reg add "HKCR\Directory\shell\runas\command" /ve /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" /r && icacls \"%%1\" /grant administrators:F /t" /f >>%loag%
-reg add "HKCR\Directory\shell\runas\command" /v "IsolatedCommand" /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" /r && icacls \"%%1\" /grant administrators:F /t" /f >>%loag%
+echo Take Ownership>>%loag%
+echo Add "Take Ownership" Option in Files and Folders Context Menu in Windows>>%loag%
+reg add "HKCR\*\shell\runas" /ve /t REG_SZ /d "Take ownership" /f>>%loag%
+reg add "HKCR\*\shell\runas" /v "HasLUAShield" /t REG_SZ /d "" /f>>%loag%
+reg add "HKCR\*\shell\runas" /v "NoWorkingDirectory" /t REG_SZ /d "" /f>>%loag%
+reg add "HKCR\*\shell\runas\command" /ve /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" && icacls \"%%1\" /grant administrators:F" /f>>%loag%
+reg add "HKCR\*\shell\runas\command" /v "IsolatedCommand" /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" && icacls \"%%1\" /grant administrators:F" /f>>%loag%
+reg add "HKCR\Directory\shell\runas" /ve /t REG_SZ /d "Take ownership" /f>>%loag%
+reg add "HKCR\Directory\shell\runas" /v "HasLUAShield" /t REG_SZ /d "" /f>>%loag%
+reg add "HKCR\Directory\shell\runas" /v "NoWorkingDirectory" /t REG_SZ /d "" /f>>%loag%
+reg add "HKCR\Directory\shell\runas\command" /ve /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" /r && icacls \"%%1\" /grant administrators:F /t" /f>>%loag%
+reg add "HKCR\Directory\shell\runas\command" /v "IsolatedCommand" /t REG_SZ /d "cmd.exe /c takeown /f \"%%1\" /r && icacls \"%%1\" /grant administrators:F /t" /f>>%loag%
 
-echo Remove Share from Context Menu >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\*\shellex\ContextMenuHandlers\ModernSharing" /f >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\*\shellex\ContextMenuHandlers\Sharing" /f >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Drive\shellex\ContextMenuHandlers\Sharing" /f >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Drive\shellex\PropertySheetHandlers\Sharing" /f >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\background\shellex\ContextMenuHandlers\Sharing" /f >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\shellex\ContextMenuHandlers\Sharing" /f >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\shellex\CopyHookHandlers\Sharing" /f >>%loag%
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\shellex\PropertySheetHandlers\Sharing" /f >>%loag%
+echo Remove Share from Context Menu>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\*\shellex\ContextMenuHandlers\ModernSharing" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\*\shellex\ContextMenuHandlers\Sharing" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Drive\shellex\ContextMenuHandlers\Sharing" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Drive\shellex\PropertySheetHandlers\Sharing" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\background\shellex\ContextMenuHandlers\Sharing" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\shellex\ContextMenuHandlers\Sharing" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\shellex\CopyHookHandlers\Sharing" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Directory\shellex\PropertySheetHandlers\Sharing" /f>>%loag%
 
-echo -------------------------------------- App Settings ---------------------------------------- >>%loag%
+echo -------------------------------------- App Settings ---------------------------------------->>%loag%
 
 TITLE Windows 11 %SETOS% 25h2 Install from USB Stick on %CLEFUSB% - Cleaning Windows Waypoints
-echo ==================================== Windows Waypoint ================================== >>%loag%
+echo ==================================== Windows Waypoint ==================================>>%loag%
 xcopy /S /H /R /D /Y %TEMP%\*.log %PUBLIC%\Desktop\loag\
-echo =================================== Settings Changes Done =================================== >>%loag%
+echo =================================== Settings Changes Done ===================================>>%loag%
 TITLE Windows 11 %SETOS% 25h2 Install from USB Stick on %CLEFUSB% - Windows PreSetup Done
-echo =================================== Pre-Setup Done =================================== >>%loag%
+echo =================================== Pre-Setup Done ===================================>>%loag%
 pause
 ::—————————————————————————————————————————————————————————————————————————————————————
 goto end
@@ -470,7 +470,7 @@ goto fin
 ::=====================================================================================
 TITLE NO USB KEY PRESENT
 echo no usb key or no admin rights
-echo no usb key or no admin rights >>%loag%
+echo no usb key or no admin rights>>%loag%
 pause
 goto fin
 ::—————————————————————————————————————————————————————————————————————————————————————
@@ -483,13 +483,13 @@ shutdown /r /f /t 0
 ::=====================================================================================
 TITLE SYNC SUCCESSFULLY DONE with %APPS% from USB Stick %CLEFUSB% to Computer %ORDI%
 echo %Kaction%
-echo %Kaction% >>%loag%
+echo %Kaction%>>%loag%
 start notepad.exe %loag%
 SET /P QUESTION=Reboot computer now? (Y/N):
 If /I %QUESTION%==Y goto reboot
 echo Will not reboot. Now exiting command prompt.
 ::—————————————————————————————————————————————————————————————————————————————————————
 :fin
-echo Done at %DATE:~0,2%/%DATE:~3,2%/%DATE:~6,6%-%heure:~0,2%H%TIME:~3,2% >>%loag%
+echo Done at %DATE:~0,2%/%DATE:~3,2%/%DATE:~6,6%-%heure:~0,2%H%TIME:~3,2%>>%loag%
 start notepad.exe %loag%
 endlocal
