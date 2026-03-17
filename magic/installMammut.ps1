@@ -1,6 +1,6 @@
 # InstallMammut script-loader 
 # 
-# Luca Weidmann and Mammut duchateau
+# Luca Weidmann and Yann duchateau
 #
 # 03.05.2026 - 1.31
 Set-ExecutionPolicy Unrestricted -Force -ErrorAction SilentlyContinue
