@@ -1,0 +1,1 @@
+﻿winget upgrade --all --silent --accept-source-agreements --accept-package-agreements >> c:\Windows\Logs\UpdatesSofts.log
