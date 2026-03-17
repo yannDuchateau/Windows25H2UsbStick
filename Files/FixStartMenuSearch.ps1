@@ -1,55 +1,31 @@
-﻿# Redémarrer le service de recherche Windows
-
-Write-Host "Redémarrage du service de recherche Windows..."
-
+﻿# Restart Windows search service
+Write-Host "Restarting Windows search service..."
 Stop-Service -Name "WSearch" -Force -ErrorAction SilentlyContinue
-
 Start-Service -Name "WSearch"
 
-# Réenregistrer le menu Démarrer et Cortana (Windows Shell Experience)
-
-Write-Host "Réenregistrement des composants du menu Démarrer et de Cortana..."
-
+# Re-Register Start Menu Experience and Cortana (Windows Shell Experience)
+Write-Host "Re-Registering of Start Menu Experience and Cortana..."
 Get-AppxPackage -AllUsers Microsoft.Windows.StartMenuExperienceHost | Foreach {
-
 Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"
-
 }
-
 Get-AppxPackage -AllUsers Microsoft.Windows.Cortana | Foreach {
-
 Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"
-
 }
 
-# Effacer le cache de recherche Windows
-
+# Erase Windows search Cache
 $searchDatabasePath = "$env:ProgramData\Microsoft\Search\Data\Applications\Windows\Windows.edb"
-
 if (Test-Path $searchDatabasePath) {
-
-Write-Host "Arrêt du service de recherche Windows pour supprimer l'index..."
-
+Write-Host "Stopping windows Search Service in order to allow Index refresh"
 Stop-Service -Name "WSearch" -Force
-
-Write-Host "Suppression de la base de données de l'index de recherche..."
-
+Write-Host "Suppressing the Windows Search Index Database file..."
 Remove-Item -Path $searchDatabasePath -Force
-
-Write-Host "Redémarrage du service de recherche Windows..."
-
+Write-Host "Restart of Wondows Search Service..."
 Start-Service -Name "WSearch"
-
 } else {
-
-Write-Host "Base de données de l'index de recherche introuvable."
-
+Write-Host "Windows Search Database File not found."
 }
 
-# Optionnel : Redémarrer l'Explorateur (pour appliquer les changements visuellement)
-
-Write-Host "Redémarrage de l'Explorateur..."
-
+# Optional : Restart Explorer (to refresh changes)
+Write-Host "Restarting Explorer..."
 Stop-Process -Name explorer -Force
-
 Start-Process explorer.exe
