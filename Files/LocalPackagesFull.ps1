@@ -53,8 +53,7 @@ Add-AppxPackage -Path $localFolderPath\Microsoft.StorePurchaseApp_8wekyb3d8bbwe.
 Add-AppxPackage -Path $localFolderPath\Microsoft.ApplicationCompatibilityEnhancements_8wekyb3d8bbwe.msixbundle
 # The following command will install the PC Manager
 Add-AppxPackage -Path $localFolderPath\Microsoft.MicrosoftPCManager_8wekyb3d8bbwe.msixbundle
-Dism /Online /Add-ProvisionedAppxPackage /packagepath:$localFolderPath\Microsoft.MicrosoftPCManager_8wekyb3d8bbwe.Msixbundle /SkipLicense
-Add-AppxPackage -Path $localFolderPath\Microsoft.MicrosoftPCManager_8wekyb3d8bbwe.msixbundle
+# Dism /Online /Add-ProvisionedAppxPackage /packagepath:$localFolderPath\Microsoft.MicrosoftPCManager_8wekyb3d8bbwe.Msixbundle /SkipLicense
 # Add-AppxPackage -Path $localFolderPath\AdobeSystemsIncorporated.AdobeCreativeCloudExpress_2.1.1.0_neutral_~_ynb6jyjzte8ga.AppxBundle
 Add-AppxPackage -Path $localFolderPath\Microsoft.Windows.Photos_8wekyb3d8bbwe.msixbundle
 Add-AppxPackage -Path $localFolderPath\Microsoft.WindowsAppRuntime.x64.1.7.msix
