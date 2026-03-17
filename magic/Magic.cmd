@@ -1,4 +1,4 @@
-@setlocal EnableDelayedExpansion
+
 @echo off & mode con cols=75 lines=6 & Title Fin tests et copie scipts
 ::—————————————————————————————————————————————————————————————————————————————————————
 :diskusb
@@ -72,14 +72,14 @@ set Kaction="Done EDGE Setup %APPS% at %heure%H%minute% " & set loag=%windir%\Lo
 ::=====================================================================================
 TITLE Script %Skript% Started at %nom_fichier% at %heure%H%minute%
 echo Script file is %src% Name is %Skript% and Log Name is %loag% & echo.
-echo Script file is %src% Job Name is %Skript% and Log Name is %loag% Script %src% Started at %heure%H%minute% >>%loag%
-echo Computer name %ORDI% Script %Skript% USB is on %CLEFUSB% >>%loag%
-echo Apps located on %APPS% and USB is on %CLEFUSB% >>%loag%
+echo Script file is %src% Job Name is %Skript% and Log Name is %loag% Script %src% Started at %heure%H%minute%>>%loag%
+echo Computer name %ORDI% Script %Skript% USB is on %CLEFUSB%>>%loag%
+echo Apps located on %APPS% and USB is on %CLEFUSB%>>%loag%
 ::—————————————————————————————————————————————————————————————————————————————————————
 :isUsb
 IF EXIST %CLEFUSB%\bootmgr.efi goto isAdmin
 ::=====================================================================================
-echo error wrong usb not present or it is not bootable. >>%loag%
+echo error wrong usb not present or it is not bootable.>>%loag%
 echo error wrong usb not present or it is not bootable.
 goto error
 ::—————————————————————————————————————————————————————————————————————————————————————
@@ -92,85 +92,85 @@ goto isNotAdmin
 ::=====================================================================================
 :softs
 ::=====================================================================================
-echo ============================== Takeown Public Desktop =============================== >>%LOAG%
+echo ============================== Takeown Public Desktop ===============================>>%loag%
 rem Take ownership of Public Desktop
-takeown /s %COMPUTERNAME% /u Administrators /f "c:\Users\Public\Desktop" /A /R /D:J >>%LOAG%
-takeown /s %COMPUTERNAME% /u Administrators /f "C:\Windows\Web\*" /A /R /D:J >>%LOAG%
+takeown /s %COMPUTERNAME% /u Administrators /f "c:\Users\Public\Desktop" /A /R /D:J>>%loag%
+takeown /s %COMPUTERNAME% /u Administrators /f "C:\Windows\Web\*" /A /R /D:J>>%loag%
 icacls C:\Windows\Web\* /save %PUBLIC%\Desktop\ACLwinweb%COMPUTERNAME%.txt /T /C /L /Q  >> %loag%
 %APPS%\subinacl.exe /errorlog="%loag%" /outputlog="%PUBLIC%\Desktop\ACLWinWeb%COMPUTERNAME%.acl" /subdirectories C:\Windows\Web\* /display=sddl
 
-echo ============================== Icacls Public Desktop ================================ >>%LOAG%
+echo ============================== Icacls Public Desktop ================================>>%loag%
 TITLE ================================ Icacls Public Desktop ================================
-icacls "c:\Users\Public\Desktop" /grant:r Administrators:(OI)(CI)F /T /C /L /Q  >>%LOAG%
-icacls "c:\Users\Public\Desktop" /grant %USERNAME%:(OI)(CI)F /T /C /L /Q  >>%LOAG%
-start.exe /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administrators=f >>%LOAG%
-start.exe /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administratoren=f >>%LOAG%
-echo ============================== Icacls Windows Web ================================ >>%LOAG%
+icacls "c:\Users\Public\Desktop" /grant:r Administrators:(OI)(CI)F /T /C /L /Q >>%loag%
+icacls "c:\Users\Public\Desktop" /grant %USERNAME%:(OI)(CI)F /T /C /L /Q >>%loag%
+start.exe /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administrators=f>>%loag%
+start.exe /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administratoren=f>>%loag%
+echo ============================== Icacls Windows Web ================================>>%loag%
 TITLE ================================ Icacls Windows Web ================================
-icacls "C:\Windows\Web\" /grant:r Administrators:(OI)(CI)F /T /C /L /Q  >>%LOAG%
-icacls "C:\Windows\Web\" /grant %USERNAME%:(OI)(CI)F /T /C /L /Q  >>%LOAG%
-start /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SYSTEM /grant=Administrators=f >>%LOAG%
-start /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion /grant=%USERNAME%=f >>%LOAG%
+icacls "C:\Windows\Web\" /grant:r Administrators:(OI)(CI)F /T /C /L /Q >>%loag%
+icacls "C:\Windows\Web\" /grant %USERNAME%:(OI)(CI)F /T /C /L /Q >>%loag%
+start /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SYSTEM /grant=Administrators=f>>%loag%
+start /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion /grant=%USERNAME%=f>>%loag%
 
 :EndComment
-echo %nom_fichier% Windows 11 %SETOS% 25H2 Install from USB Stick on %CLEFUSB% >>%loag%
+echo %nom_fichier% Windows 11 %SETOS% 25H2 Install from USB Stick on %CLEFUSB%>>%loag%
 TITLE %nom_fichier% Windows 11 %SETOS% 25H2 Install from USB Stick on %CLEFUSB%
 rem Snapshot
-TASKLIST /FI "USERNAME ne NT AUTHORITY\SYSTEM" /FI "STATUS eq running" /V   >>%LOAG%
+TASKLIST /FI "USERNAME ne NT AUTHORITY\SYSTEM" /FI "STATUS eq running" /V  >>%loag%
 
-echo --------------------------------------- Powershell Enabled ----------------------------------------- >>%loag%
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell" /v "EnableScripts" /t REG_SZ /d "1" /f >>%loag%
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell" /v "ExecutionPolicy" /t REG_SZ /d "Unrestricted" /f >>%loag%
+echo --------------------------------------- Powershell Enabled ----------------------------------------->>%loag%
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell" /v "EnableScripts" /t REG_SZ /d "1" /f>>%loag%
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell" /v "ExecutionPolicy" /t REG_SZ /d "Unrestricted" /f>>%loag%
 
 TITLE %jour%-%mois%-%annee%-%heure%H%minute% Windows 11 %SETOS% 25H2 Install from USB Stick on %CLEFUSB% - Cleaning Windows
-echo %jour%-%mois%-%annee%-%heure%H%minute% Windows 11 %SETOS% 25H2 Install from USB Stick on %CLEFUSB% - Cleaning Windows >>%LOAG%
-echo =================================== Cleaning Windows ============================== >>%loag%
-echo --------------------------------------- System ----------------------------------------- >>%loag%
-REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\3" /t REG_DWORD /v 1A10 /f /d 0 >>%LOAG%
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "%CLEFUSB%\magic\bootstrap.ps1" >%loag% >>%loag%
+echo %jour%-%mois%-%annee%-%heure%H%minute% Windows 11 %SETOS% 25H2 Install from USB Stick on %CLEFUSB% - Cleaning Windows>>%loag%
+echo =================================== Cleaning Windows ==============================>>%loag%
+echo --------------------------------------- System ----------------------------------------->>%loag%
+REG ADD "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\3" /t REG_DWORD /v 1A10 /f /d 0>>%loag%
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "%CLEFUSB%\magic\bootstrap.ps1" >%loag%>>%loag%
 
 if exist "%windir%\Setup\Files\post-setup.ps1" goto features
 echo Corporate post-setup failed
-echo Corporate post-setup failed >>%loag%
+echo Corporate post-setup failed>>%loag%
 
 :Corporate
 rem Post Setup Files
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "%windir%\Setup\Files\post-setup.ps1" >%loag% >>%loag%
-echo CORPORATE silent install >%loag% >>%loag%
-echo ........................................ About ......................................... >>%loag%
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "%windir%\Setup\Files\post-setup.ps1" >%loag%>>%loag%
+echo CORPORATE silent install >%loag%>>%loag%
+echo ........................................ About .........................................>>%loag%
 :features
-echo =================================== Remove or Add various Windows Features =================================== >>%loag%
+echo =================================== Remove or Add various Windows Features ===================================>>%loag%
 rem Now configuring Windows Features.
 rem # Windows update services required for DISM
 rem # "DISM /Online /Get-Features /format:table" shows installed features
 rem # "Get-WindowsOptionalFeature -Online" shows installed features
 rem # Possible AUTO-REBOOT if ran without admin privileges
 rem # REBOOT RECOMMENDED
-echo =========================== Modifying essential startup entries ========================== >>%loag%
-echo =================================== Disable various Windows Features =================================== >>%loag%
+echo =========================== Modifying essential startup entries ==========================>>%loag%
+echo =================================== Disable various Windows Features ===================================>>%loag%
 TITLE Windows 11 %SETOS% 25h2 Install from USB Stick on %CLEFUSB% - Disable various Windows Features
-powershell Remove-WindowsCapability -Name StepsRecorder -Online >>%loag%
-powershell Remove-WindowsCapability -Name QuickAssist -Online >>%loag%
-DISM /Online /Remove-Capability /CapabilityName:"App.WirelessDisplay.Connect~~~~0.0.1.0" /NoRestart >>%loag%
-DISM /Online /Remove-Capability /CapabilityName:"App.StepsRecorder~~~~0.0.1.0" /NoRestart >>%loag%
-DISM /Online /Remove-Capability /CapabilityName:"App.Support.QuickAssist~~~~0.0.1.0" /NoRestart >>%loag%
-Dism /Online /Disable-Feature /Featurename:Recall /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"AppServerClient" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Analog.Holographic.Desktop~~~~0.0.1.0" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"FaxServicesClientPackage" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Internet-Explorer-Optional-x64" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Internet-Explorer-Optional-amd64" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-All" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-Management-Clients" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-Management-PowerShell" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-Tools-All" /NoRestart >>%loag%
+powershell Remove-WindowsCapability -Name StepsRecorder -Online>>%loag%
+powershell Remove-WindowsCapability -Name QuickAssist -Online>>%loag%
+DISM /Online /Remove-Capability /CapabilityName:"App.WirelessDisplay.Connect~~~~0.0.1.0" /NoRestart>>%loag%
+DISM /Online /Remove-Capability /CapabilityName:"App.StepsRecorder~~~~0.0.1.0" /NoRestart>>%loag%
+DISM /Online /Remove-Capability /CapabilityName:"App.Support.QuickAssist~~~~0.0.1.0" /NoRestart>>%loag%
+Dism /Online /Disable-Feature /Featurename:Recall /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"AppServerClient" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Analog.Holographic.Desktop~~~~0.0.1.0" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"FaxServicesClientPackage" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Internet-Explorer-Optional-x64" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Internet-Explorer-Optional-amd64" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-All" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-Management-Clients" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-Management-PowerShell" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Microsoft-Hyper-V-Tools-All" /NoRestart>>%loag%
 dism /Online /Disable-Feature /FeatureName:"Printing-Foundation-Features" /NoRestart
-dism /Online /Disable-Feature /FeatureName:"Printing-Foundation-InternetPrinting-Client" /NoRestart >>%loag%
-dism /Online /Disable-Feature /FeatureName:"Printing-Foundation-LPDPrintService" /NoRestart >>%loag%
-dism /Online /Disable-Feature /FeatureName:"Printing-Foundation-LPRPortMonitor" /NoRestart >>%loag%
-dism /Online /Disable-Feature /FeatureName:"Printing-XPSServices-Features" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"Printing-Foundation-LPRPortMonitor" /NoRestart >>%loag%
-DISM /Online /Disable-Feature /FeatureName:"RasCMAK.Client~~~~0.0.1.0" /NoRestart >>%loag%
+dism /Online /Disable-Feature /FeatureName:"Printing-Foundation-InternetPrinting-Client" /NoRestart>>%loag%
+dism /Online /Disable-Feature /FeatureName:"Printing-Foundation-LPDPrintService" /NoRestart>>%loag%
+dism /Online /Disable-Feature /FeatureName:"Printing-Foundation-LPRPortMonitor" /NoRestart>>%loag%
+dism /Online /Disable-Feature /FeatureName:"Printing-XPSServices-Features" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"Printing-Foundation-LPRPortMonitor" /NoRestart>>%loag%
+DISM /Online /Disable-Feature /FeatureName:"RasCMAK.Client~~~~0.0.1.0" /NoRestart>>%loag%
 DISM /Online /Disable-Feature /FeatureName:"SNMP.Client~~~~0.0.1.0" /NoRestart >>%loag%
 DISM /Online /Disable-Feature /FeatureName:"WMI-SNMP-Provider.Client~~~~0.0.1.0" /NoRestart>>%loag%
 sc stop "WSearch"
