@@ -131,7 +131,8 @@ $ErrorActionPreference = 'Continue';
 }
 
 function removeCopilot {
-Remove-AppxPackage -Path $localFolderPath\Microsoft.Copilot_1.25102.233.0_neutral_~_8wekyb3d8bbwe
+get-appxpackage *copilot* | remove-appxpackage
+Get-AppxPackage -AllUsers | Where-Object {$_.Name -Like '*Microsoft.Copilot*'} | Remove-AppxPackage -AllUsers -ErrorAction Continue
 $ErrorActionPreference = 'Continue';
 }
 function AddCopilot {
