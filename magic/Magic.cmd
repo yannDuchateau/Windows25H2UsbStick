@@ -102,8 +102,8 @@ echo ============================== Icacls Public Desktop ======================
 TITLE ================================ Icacls Public Desktop ================================
 icacls "c:\Users\Public\Desktop" /grant:r Administrators:(OI)(CI)F /T /C /L /Q >>%loag%
 icacls "c:\Users\Public\Desktop" /grant %USERNAME%:(OI)(CI)F /T /C /L /Q >>%loag%
-start.exe /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administrators=f>>%loag%
-start.exe /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administratoren=f>>%loag%
+start /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administrators=f>>%loag%
+start /wait /abovenormal %APPS%\subinacl.exe /subkeyreg HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation /grant=Administratoren=f>>%loag%
 echo ============================== Icacls Windows Web ================================>>%loag%
 TITLE %Kaction%  Icacls Windows Web 
 icacls "C:\Windows\Web\" /grant:r Administrators:(OI)(CI)F /T /C /L /Q >>%loag%
