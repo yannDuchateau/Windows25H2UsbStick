@@ -153,7 +153,7 @@ AppsFolderPath
 installLocalPackages
 installOnlinePackages
 # SwissPackagesAmD
-# removeCopilot
+removeCopilot
 # AddCopilot
 RepairPackages
 
