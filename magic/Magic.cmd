@@ -70,7 +70,7 @@ ECHO %~nx0? |FIND.EXE /I ".cmd?" >nul & IF not errorlevel=1 SET src=%~nx0 & IF e
 set Skript=%src:~0,-5%
 set Kaction="Done EDGE Setup %APPS% at %heure%H%minute% " & set loag=%windir%\Logs\%Skript%.%nom_fichier%.log
 ::=====================================================================================
-TITLE Script %Skript% Started at %nom_fichier% at %heure%H%minute% " 
+TITLE Script %Skript% Started at %nom_fichier% at %heure%H%minute%
 echo Script file is %src% Name is %Skript% and Log Name is %loag% & echo.
 echo Script file is %src% Job Name is %Skript% and Log Name is %loag% Script %src% Started at %heure%H%minute% >>%loag%
 echo Computer name %ORDI% Script %Skript% USB is on %CLEFUSB% >>%loag%
@@ -85,7 +85,7 @@ goto error
 ::—————————————————————————————————————————————————————————————————————————————————————
 :isAdmin
 ::=====================================================================================
-TITLE Script %Skript% Started at %nom_fichier% at %heure%H%minute% "
+TITLE Script %Skript% Started at %nom_fichier% at %heure%H%minute%
 IF EXIST %loag% goto softs
 echo Could not write the Log File.
 goto isNotAdmin
