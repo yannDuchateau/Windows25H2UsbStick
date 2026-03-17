@@ -1,8 +1,8 @@
-﻿# bootstrap-script-loader
+# bootstrap-script-loader
 #
 # Yann Duchateau
 # 
-# 2025-04-09 - 1.3.0
+# 2025-03-017 - 1.3.1
 Set-ExecutionPolicy Unrestricted -Force -ErrorAction SilentlyContinue
 import-module dism
 import-module Appx
@@ -20,6 +20,10 @@ Start-Transcript -Path "C:\Windows\Logs\bootstrap$LogDate.ps1.log"
 LOgCreate
 
 $ErrorActionPreference = 'Continue';
+
+Get-AppxPackage *getstarted* | Remove-AppxPackage
+get-appxpackage *copilot* | remove-appxpackage
+Get-AppxPackage -AllUsers | Where-Object {$_.Name -Like '*Microsoft.Copilot*'} | Remove-AppxPackage -AllUsers -ErrorAction Continue
 
 # Disable-WindowsDefender during Windows Installation
 function Disable-WindowsDefender {
@@ -861,6 +865,46 @@ Windows Registry Editor Version 5.00
 ; Disable Windows Copilot system-wide
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot]
 "TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge]
+"CopilotCDPPageContext"=dword:00000000
+"CopilotPageContext"=dword:00000000
+"HubsSidebarEnabled"=dword:00000001
+"EdgeEntraCopilotPageContext"=dword:00000000
+"Microsoft365CopilotChatIconEnabled"=dword:00000000
+"EdgeHistoryAISearchEnabled"=dword:00000000
+"ComposeInlineEnabled"=dword:00000000
+"GenAILocalFoundationalModelSettings"=dword:00000000
 
 ; Prevents Dev Home Installation
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate]
@@ -1825,6 +1869,46 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsCopilot]
 "TurnOffWindowsCopilot"=dword:00000001
 
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge]
+"CopilotCDPPageContext"=dword:00000000
+"CopilotPageContext"=dword:00000000
+"HubsSidebarEnabled"=dword:00000001
+"EdgeEntraCopilotPageContext"=dword:00000000
+"Microsoft365CopilotChatIconEnabled"=dword:00000000
+"EdgeHistoryAISearchEnabled"=dword:00000000
+"ComposeInlineEnabled"=dword:00000000
+"GenAILocalFoundationalModelSettings"=dword:00000000
+
 ; ENABLE ADVERTISING & PROMOTIONAL
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
 ; enabled for any of the dynamic content to work
@@ -1944,6 +2028,47 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsCopilot]
 "TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsCopilot]
+"TurnOffWindowsCopilot"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsAI]
+"DisableAIDataAnalysis"=dword:00000001
+"AllowRecallEnablement"=dword:00000000
+"DisableClickToDo"=dword:00000001
+"TurnOffSavingSnapshots"=dword:00000001
+"DisableSettingsAgent"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge]
+"CopilotCDPPageContext"=dword:00000000
+"CopilotPageContext"=dword:00000000
+"HubsSidebarEnabled"=dword:00000001
+"EdgeEntraCopilotPageContext"=dword:00000000
+"Microsoft365CopilotChatIconEnabled"=dword:00000000
+"EdgeHistoryAISearchEnabled"=dword:00000000
+"ComposeInlineEnabled"=dword:00000000
+"GenAILocalFoundationalModelSettings"=dword:00000000
+
 
 [HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\WindowsUpdate]
 "SetUpdateNotificationLevel"=dword:00000001
@@ -3552,9 +3677,14 @@ Write-Host 'Expand-Archive -Force "$postsetup" "C:\Windows\Setup\Files\post-setu
 Expand-Archive -Force "$postsetup" "C:\Windows\Setup\Files\post-setup";
  $ErrorActionPreference = 'Continue';
 
-Write-Host 'Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Application.exe" -Wait -NoNewWindow'
-Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Application.ps1" -Wait -NoNewWindow
+Write-Host 'Start-Process -FilePath "C:\Windows\Setup\post-setup\Files\Deploy-Application.exe" -Wait -NoNewWindow'
+Start-Process -FilePath "C:\Windows\Setup\Files\post-setup\Deploy-Application.exe" -Wait -NoNewWindow
 $ErrorActionPreference = 'Continue'
+
+Write-Host 'Start-Process -FilePath "C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow'
+Start-Process -FilePath "C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow
+$ErrorActionPreference = 'Continue'
+
 } 
 
 # Find Usb Installation path
@@ -3819,7 +3949,7 @@ function US-SwissRegion {
     Set-Content -Path "$env:TEMP\Enable_Windows_Defender.reg" -Value $MultilineComment -Force
     $path = "$env:TEMP\Enable_UserUS_Switzerland.reg"
     (Get-Content $path) -replace "\?", "$" | Out-File $path
-    Regedit.exe /S "$env:TEMP\Enable_UserUS_Switzerlan.reg"
+    Regedit.exe /S "$env:TEMP\Enable_UserUS_Switzerland.reg"
     Write-Host "."User Profile Set to US-Swiss -ForegroundColor Green
 }
 
