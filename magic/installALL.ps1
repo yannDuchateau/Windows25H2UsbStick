@@ -1,6 +1,6 @@
 # InstallAll script-loader 
 # 
-# Luca Weidmann and yann duchateau
+# yann duchateau
 #
 # 03.05.2026 - 1.3.1
 Set-ExecutionPolicy Unrestricted -Force -ErrorAction SilentlyContinue
