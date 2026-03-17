@@ -41,11 +41,11 @@ else { Write-Host "Postsetup found at $postsetup"; }
 Write-Host 'Expand-Archive -Force "$post-setup" "C:\Windows\Setup\post-setup"'
 Expand-Archive -Force "$postsetup" "C:\Windows\Setup\post-setup"
 Write-Host 'Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Application.exe" -Wait -NoNewWindow'
-Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Application.exe" -Wait -NoNewWindow
+Start-Process -FilePath "C:\Windows\Setup\Files\post-setup\Deploy-Application.exe" -Wait -NoNewWindow
 
 $ErrorActionPreference = 'Continue';
 # Write-Host 'Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Application.ps1" -Wait -NoNewWindow'
-# Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Application.ps1" -Wait -NoNewWindow
+# Start-Process -FilePath "C:\Windows\Setup\Files\post-setup\Deploy-Application.ps1" -Wait -NoNewWindow
 
 Write-Host "Done;"
 Stop-Transcript;
