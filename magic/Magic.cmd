@@ -293,28 +293,28 @@ netsh advfirewall firewall add rule name="Update Time DNS" dir=out action=allow 
 netsh advfirewall firewall add rule name="Update Time UDP" dir=out action=allow protocol=UDP remoteip=Any remoteport=123 program="%ONEDRIVE%\PROGS\Windows Repair Toolbox\Downloads\Custom Tools\Added Custom Tools\UpdateTime.exe"
 netsh advfirewall firewall add rule name="WRT DNS" dir=out action=allow protocol=UDP remoteip=Any remoteport=53 program="%ONEDRIVE%\PROGS\Windows Repair Toolbox\Windows_Repair_Toolbox.exe"
 
-schtasks /Change /TN "Microsoft\Windows\Windows Error Reporting\QueueReporting" /Disable
+schtasks /Change /TN "Microsoft\Windows\Windows Error Reporting\QueueReporting" /Disable>>%loag%
 
 
 echo Repair WinRm>>%loag%
 rem Enable WinRm
-reg add HKLM\SYSTEM\CurrentControlSet\Services\RemoteRegistry" /v "Start" /t REG_DWORD /d "3" /f
-reg add HKLM\SYSTEM\CurrentControlSet\Services\SNMPTRAP" /v "Start" /t REG_DWORD /d "3" /f
-reg add HKLM\SYSTEM\CurrentControlSet\Services\WinRM" /v "Start" /t REG_DWORD /d "3" /f
-net localgroup Administrators /add networkservice
-net localgroup Administrators /add localservice
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\RemoteRegistry" /v "Start" /t REG_DWORD /d "3" /f>>%loag%
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\SNMPTRAP" /v "Start" /t REG_DWORD /d "3" /f>>%loag%
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\WinRM" /v "Start" /t REG_DWORD /d "3" /f>>%loag%
+net localgroup Administrators /add networkservice>>%loag%
+net localgroup Administrators /add localservice>>%loag%
 rem Repair WMI
 rem ________________________________________________________________________________________
 rem Disable Remote Assistance Winrn and SNMP services for monitoring
-sc config SNMPTRAP start= demand
-sc config RemoteRegistry start= demand
-sc config WinRm start= demand
+sc config SNMPTRAP start= demand>>%loag%
+sc config RemoteRegistry start= demand>>%loag%
+sc config WinRm start= demand>>%loag%
 rem System Protection - Enable System restore and Set the size
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore" /v "DisableSR" /f
-reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore" /v "DisableConfig" /f
-reg add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore" /v "DisableSR" /t REG_DWORD /d "0" /f
-reg add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SPP\Clients" /v " {09F7EDC5-294E-4180-AF6A-FB0E6A0E9513}" /t REG_MULTI_SZ /d "1" /f
-schtasks /Change /TN "Microsoft\Windows\SystemRestore\SR" /Enable
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore" /v "DisableSR" /f>>%loag%
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore" /v "DisableConfig" /f>>%loag%
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore" /v "DisableSR" /t REG_DWORD /d "0" /f>>%loag%
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SPP\Clients" /v " {09F7EDC5-294E-4180-AF6A-FB0E6A0E9513}" /t REG_MULTI_SZ /d "1" /f>>%loag%
+schtasks /Change /TN "Microsoft\Windows\SystemRestore\SR" /Enable>>%loag%
 
 TITLE Windows 11 %SETOS% 25h2 Install from USB Stick on %CLEFUSB% - Configuring Windows Filesystem
 rem ================================ Windows Filesystem ===============================
@@ -327,13 +327,13 @@ fsutil 8dot3name scan c:\
 fsutil behavior set disable8dot3 1
 
 rem 1 - When listing directories, NTFS does not update the last-access timestamp, and it does not record time stamp updates in the NTFS log
-fsutil behavior set disablelastaccess 0x1
+fsutil behavior set disablelastaccess 0x1>>%loag%
 
-vssadmin Resize ShadowStorage /For=C: /On=C: /Maxsize=5GB
-rem sc config wbengine start= auto
-rem sc config swprv start= auto
-rem sc config vds start= auto
-sc config VSS start= auto
+vssadmin Resize ShadowStorage /For=C: /On=C: /Maxsize=5GB>>%loag%
+rem sc config wbengine start= auto>>%loag%
+rem sc config swprv start= auto>>%loag%
+rem sc config vds start= auto>>%loag%
+sc config VSS start= auto>>%loag%
 
 TITLE Windows 11 %SETOS% 25h2 Install from USB Stick on %CLEFUSB% - Configuring Time and Language
 
