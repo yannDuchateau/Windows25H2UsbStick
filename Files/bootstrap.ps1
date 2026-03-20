@@ -3678,7 +3678,8 @@ Expand-Archive -Force "$postsetup" "C:\Windows\Setup\Files\post-setup";
  $ErrorActionPreference = 'Continue';
 
 Write-Host 'Start-Process -FilePath "C:\Windows\Setup\post-setup\Files\Deploy-Application.exe" -Wait -NoNewWindow'
-Start-Process -FilePath "C:\Windows\Setup\Files\post-setup\Deploy-Application.exe" -Wait -NoNewWindow
+Start-Process -FilePath "C:\Windows\Setup\Files\post-setup\Deploy-Application.exe" -Silent
+-Wait -NoNewWindow
 $ErrorActionPreference = 'Continue'
 
 Write-Host 'Start-Process -FilePath "C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow'
