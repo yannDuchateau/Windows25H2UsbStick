@@ -193,6 +193,56 @@ Function CreateInstShortcut {
         Write-host "Failed to create desktop shortcut: $($_.Exception.Message)" "ERROR"
     }
 }
+
+# Create Aplications Shortcut
+Function CreateAppshortcut {
+    # Create desktop shortcut for all Installed Applicationss
+    $SystemDir = "C:\WINDOWS\"
+    try {
+        $targetFile = Join-Path $SystemDir "explorer.exe"
+        $shortcutPath = "C:\Users\Public\Desktop\Applications.lnk"
+        $WshShell = New-Object -ComObject WScript.Shell
+        $shortcut = $WshShell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = "%windir%\explorer.exe"
+        $shortcut.Arguments = "shell:::{4234d49b-0245-4df3-b780-3893943456e1}"
+        $shortcut.IconLocation = "C:\Windows\System32\dccw.exe,0"
+        $shortcut.WorkingDirectory = "C:\Windows\"
+        $shortcut.Description = "All Installed Applications"
+        $shortcut.Save()
+        $bytes = [System.IO.File]::ReadAllBytes($shortcutPath)
+        $bytes[21] = 34
+        [System.IO.File]::WriteAllBytes($shortcutPath, $bytes)
+        Write-host "Created desktop shortcut: $shortcutPath" "SUCCESS"
+    } catch {
+        Write-host "Failed to create desktop shortcut: $($_.Exception.Message)" "ERROR"
+    }
+}
+
+# Create Windows Tools Shortcut
+Function CreateAppshortcut {
+    # Create desktop shortcut for Windows Tools
+    $SystemDir = "C:\WINDOWS\"
+    try {
+        $targetFile = Join-Path $SystemDir "explorer.exe"
+        $shortcutPath = "C:\Users\Public\Desktop\Windows Tools.lnk"
+        $WshShell = New-Object -ComObject WScript.Shell
+        $shortcut = $WshShell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = "%windir%\system32\control.exe"
+        $shortcut.Arguments = " /name Microsoft.AdministrativeTools"
+        $shortcut.IconLocation = "%windir%\system32\shell32.dll,-16826"
+        $shortcut.WorkingDirectory = "C:\Windows\"
+        $shortcut.Description = "All Installed Applications"
+        $shortcut.Save()
+        $bytes = [System.IO.File]::ReadAllBytes($shortcutPath)
+        $bytes[21] = 34
+        [System.IO.File]::WriteAllBytes($shortcutPath, $bytes)
+        Write-host "Created desktop shortcut: $shortcutPath" "SUCCESS"
+    } catch {
+        Write-host "Failed to create desktop shortcut: $($_.Exception.Message)" "ERROR"
+    }
+}
+CreateAppshortcut
+
 # Disable-WindowsDefender during Setup
 function Disable-WindowsDefender {
     $MultilineComment = @"
@@ -1137,12 +1187,28 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge]
 "CopilotCDPPageContext"=dword:00000000
 "CopilotPageContext"=dword:00000000
-"HubsSidebarEnabled"=dword:00000000
+"HubsSidebarEnabled"=dword:00000001
 "EdgeEntraCopilotPageContext"=dword:00000000
 "Microsoft365CopilotChatIconEnabled"=dword:00000000
 "EdgeHistoryAISearchEnabled"=dword:00000000
-"ComposeInlineEnabled"=dword:00000001
+"ComposeInlineEnabled"=dword:00000000
 "GenAILocalFoundationalModelSettings"=dword:00000000
+"ConfigureDoNotTrack"=dword:00000001
+"PaymentMethodQueryEnabled"=dword:00000000
+"PersonalizationReportingEnabled"=dword:00000000
+"AddressBarMicrosoftSearchInBingProviderEnabled"=dword:00000000
+"UserFeedbackAllowed"=dword:00000000
+"AutofillCreditCardEnabled"=dword:00000000
+"AutofillAddressEnabled"=dword:00000000
+"LocalProvidersEnabled"=dword:00000001
+"SearchSuggestEnabled"=dword:00000000
+"EdgeShoppingAssistantEnabled"=dword:00000000
+"WebWidgetAllowed"=dword:00000001
+"HubsSidebarEnabled"=dword:00000001
+"BrowserSignin"=dword:00000001
+"MicrosoftEditorProofingEnabled"=dword:00000000
+"ResolveNavigationErrorsUseWebService"=dword:00000000
+"AlternateErrorPagesEnabled"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge]
 "CopilotCDPPageContext"=dword:00000000
@@ -1151,8 +1217,81 @@ Windows Registry Editor Version 5.00
 "EdgeEntraCopilotPageContext"=dword:00000000
 "Microsoft365CopilotChatIconEnabled"=dword:00000000
 "EdgeHistoryAISearchEnabled"=dword:00000000
-"ComposeInlineEnabled"=dword:00000001
+"ComposeInlineEnabled"=dword:00000000
 "GenAILocalFoundationalModelSettings"=dword:00000000
+"ConfigureDoNotTrack"=dword:00000001
+"PaymentMethodQueryEnabled"=dword:00000000
+"PersonalizationReportingEnabled"=dword:00000000
+"AddressBarMicrosoftSearchInBingProviderEnabled"=dword:00000000
+"AutofillCreditCardEnabled"=dword:00000000
+"UserFeedbackAllowed"=dword:00000000
+"MicrosoftEditorProofingEnabled"=dword:00000000
+"WebWidgetAllowed"=dword:00000001
+"EdgeShoppingAssistantEnabled"=dword:00000000
+"SearchSuggestEnabled"=dword:00000000
+"LocalProvidersEnabled"=dword:00000001
+"AutofillAddressEnabled"=dword:00000000
+"AddressBarMicrosoftSearchInBingProviderEnabled"=dword:00000000
+"PersonalizationReportingEnabled"=dword:00000000
+"PaymentMethodQueryEnabled"=dword:00000000
+"ConfigureShare"=dword:00000001
+"ConfigureDoNotTrack"=dword:00000001
+"AlternateErrorPagesEnabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\EdgeUpdate]
+"CreateDesktopShortcutDefault"=dword:00000000
+
+HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings\WinHttp]
+"DisableWpad"=dword:00000001
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings]
+"AutoDetect"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WinHttpAutoProxySvc]
+"Start"=dword:00000002
+
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WinHttpAutoProxySvc]
+"Start"=dword:00000002
+
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\EdgeUpdate]
+"CreateDesktopShortcutDefault"=dword:00000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Internet Explorer]
+"AllowServicePoweredQSA"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Internet Explorer\SQM]
+"DisableCustomerImprovementProgram"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\BooksLibrary]
+"EnableExtendedBooksTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\Main]
+"AllowInPrivate"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\PhishingFilter]
+"EnabledV9"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\TabPreloader]
+"PreventTabPreloading"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\EdgeUpdate]
+"CreateDesktopShortcutDefault"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\BooksLibrary]
+"EnableExtendedBooksTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main]
+"AllowInPrivate"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter]
+"EnabledV9"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\TabPreloader]
+"PreventTabPreloading"=dword:00000001
 
 ; Prevents Dev Home Installation
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate]
@@ -1491,30 +1630,50 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\WindowsNotepad]
 "DisableAIFeatures"=dword:00000001
 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy]
+"LetAppsAccessGenerativeAI"=dword:00000002
+"LetAppsAccessSystemAIModels"=dword:00000002
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot]
 "TurnOffWindowsCopilot"=dword:00000001
-"AllowCopilotRuntime"=dword:00000000
+"AllowCopilotRuntime"=-
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsCopilot]
 "TurnOffWindowsCopilot"=dword:00000001
-"AllowCopilotRuntime"=dword:00000000
+"AllowCopilotRuntime"=-
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\WindowsAI]
 "DisableAIDataAnalysis"=dword:00000001
-"AllowRecallEnablement"=dword:00000000
+"AllowRecallEnablement"=-
 "DisableClickToDo"=dword:00000001
 "TurnOffSavingSnapshots"=dword:00000001
 "DisableSettingsAgent"=dword:00000001
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge]
-"CopilotCDPPageContext"=dword:00000000
-"CopilotPageContext"=dword:00000000
-"HubsSidebarEnabled"=dword:00000000
-"EdgeEntraCopilotPageContext"=dword:00000000
-"Microsoft365CopilotChatIconEnabled"=dword:00000000
-"EdgeHistoryAISearchEnabled"=dword:00000000
-"ComposeInlineEnabled"=dword:00000001
-"GenAILocalFoundationalModelSettings"=dword:00000000
+"CopilotCDPPageContext"=-
+"CopilotPageContext"=-
+"HubsSidebarEnabled"=dword:00000001
+"EdgeEntraCopilotPageContext"=dword:-
+"Microsoft365CopilotChatIconEnabled"=-
+"EdgeHistoryAISearchEnabled"=-
+"ComposeInlineEnabled"=-
+"GenAILocalFoundationalModelSettings"=-
+"ConfigureDoNotTrack"=dword:00000001
+"PaymentMethodQueryEnabled"=dword:00000000
+"PersonalizationReportingEnabled"=dword:00000000
+"AddressBarMicrosoftSearchInBingProviderEnabled"=dword:00000000
+"UserFeedbackAllowed"=dword:00000000
+"AutofillCreditCardEnabled"=dword:00000000
+"AutofillAddressEnabled"=dword:00000000
+"LocalProvidersEnabled"=dword:00000001
+"SearchSuggestEnabled"=dword:00000000
+"EdgeShoppingAssistantEnabled"=dword:00000000
+"WebWidgetAllowed"=dword:00000001
+"HubsSidebarEnabled"=dword:00000001
+"BrowserSignin"=dword:00000001
+"MicrosoftEditorProofingEnabled"=dword:00000000
+"ResolveNavigationErrorsUseWebService"=dword:00000000
+"AlternateErrorPagesEnabled"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Edge]
 "CopilotCDPPageContext"=dword:00000000
@@ -1523,8 +1682,81 @@ Windows Registry Editor Version 5.00
 "EdgeEntraCopilotPageContext"=dword:00000000
 "Microsoft365CopilotChatIconEnabled"=dword:00000000
 "EdgeHistoryAISearchEnabled"=dword:00000000
-"ComposeInlineEnabled"=dword:00000001
+"ComposeInlineEnabled"=dword:00000000
 "GenAILocalFoundationalModelSettings"=dword:00000000
+"ConfigureDoNotTrack"=dword:00000001
+"PaymentMethodQueryEnabled"=dword:00000000
+"PersonalizationReportingEnabled"=dword:00000000
+"AddressBarMicrosoftSearchInBingProviderEnabled"=dword:00000000
+"AutofillCreditCardEnabled"=dword:00000000
+"UserFeedbackAllowed"=dword:00000000
+"MicrosoftEditorProofingEnabled"=dword:00000000
+"WebWidgetAllowed"=dword:00000001
+"EdgeShoppingAssistantEnabled"=dword:00000000
+"SearchSuggestEnabled"=dword:00000000
+"LocalProvidersEnabled"=dword:00000001
+"AutofillAddressEnabled"=dword:00000000
+"AddressBarMicrosoftSearchInBingProviderEnabled"=dword:00000000
+"PersonalizationReportingEnabled"=dword:00000000
+"PaymentMethodQueryEnabled"=dword:00000000
+"ConfigureShare"=dword:00000001
+"ConfigureDoNotTrack"=dword:00000001
+"AlternateErrorPagesEnabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate]
+"CopilotUpdatePath"=-
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate]
+"path"="C:\\Program Files (x86)\\Microsoft\\EdgeUpdate\\MicrosoftEdgeUpdate.exe"
+"UninstallCmdLine"="\"C:\\Program Files (x86)\\Microsoft\\EdgeUpdate\\MicrosoftEdgeUpdate.exe\" /uninstall"
+"CopilotUpdatePath"=-
+"OOBEDiagnosticsSent"=dword:00000001
+"LastInstallerResult"=dword:00000000
+"LastInstallerError"=dword:00000002
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\EdgeUpdate]
+"CreateDesktopShortcutDefault"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Internet Explorer]
+"AllowServicePoweredQSA"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Internet Explorer\SQM]
+"DisableCustomerImprovementProgram"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\BooksLibrary]
+"EnableExtendedBooksTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\Main]
+"AllowInPrivate"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\PhishingFilter]
+"EnabledV9"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\TabPreloader]
+"PreventTabPreloading"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\EdgeUpdate]
+"CreateDesktopShortcutDefault"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\BooksLibrary]
+"EnableExtendedBooksTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main]
+"AllowInPrivate"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\PhishingFilter]
+"EnabledV9"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MicrosoftEdge\TabPreloader]
+"PreventTabPreloading"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Microsoft.Copilot_8wekyb3d8bbwe]
+"RemovePackage"=dword:00000001
+
 "@
     Set-Content -Path "$env:TEMP\Copilot_Removal_Registry.reg" -Value $MultilineComment -Force
     # edit reg file
@@ -5106,7 +5338,6 @@ function Enable-WindowsDefender {
 
 Remove-Shortcuts
 Disable-WindowsDefender
-CreateInstShortcut
 #Set-CorporateSettings
 Set-HomeSettings
 Set-RecommendedPrivacySettings
@@ -5121,6 +5352,8 @@ StartYannSetup
 AppsInstallation
 TeleMetry
 Set-RecommendedUpdateSettings
+CreateInstShortcut
+CreateAppshortcut
 #OptimizeNvme
 Enable-WindowsDefender
 
