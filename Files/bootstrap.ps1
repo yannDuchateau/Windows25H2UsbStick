@@ -257,8 +257,9 @@ function Remove-Shortcuts {
     Remove-Item "C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk" -ErrorAction SilentlyContinue
     Write-Host "Shortcuts has been Removed successfully." -ForegroundColor Green
 }
-# Sets Power Settings
-function Set-PowerUserSettings {
+
+# Sets Corporate Setting for Windows Pro
+function Set-CorporateSettings {
     
     # Enable UAC and set the default prompt behavior
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 1 /f 2>&1 | Out-Null
@@ -271,7 +272,7 @@ function Set-PowerUserSettings {
 	Windows Registry Editor Version 5.00
 
 [HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer]
-"NoStartMenuMorePrograms"=dword:00000001
+"NoStartMenuMorePrograms"=dword:00000000
 
 [HKEY_CLASSES_ROOT\*\shell\TakeOwnership]
 @="Take Ownership"
@@ -294,23 +295,25 @@ function Set-PowerUserSettings {
 
 [HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
 "DisableTelemetry"=dword:00000001
-:: Set the registry value: Microsoft\Office\15.0\Common\ClientTelemetry
+
 [HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
 "DisableTelemetry"=dword:00000001
-:: Set the registry value: Microsoft\Office\16.0\Common\ClientTelemetry
+
 [HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
 "DisableTelemetry"=dword:00000001
-:: Set the registry value: Microsoft\Office\Common\ClientTelemetry
+
 [HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
 "VerboseLogging"=dword:00000003
-:: Set the registry value: Microsoft\Office\15.0\Common\ClientTelemetry
+
 [HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
-"VerboseLogging"=dword:00000003
-:: Set the registry value: \Microsoft\Office\16.0\Common\ClientTelemetry
+"VerboseLogging"=dword:00000000
+
 [HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
-"VerboseLogging"=dword:00000003
+"VerboseLogging"=dword:00000000
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning]
 "FirstRunComplete"=dword:00000001
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning\AutopilotSettings]
 "DisableAutopilotAgilityProductVersionTelemetry"=dword:00000001
 "AgilityProductName"="Windows.Autopilot.x64"
@@ -327,11 +330,13 @@ function Set-PowerUserSettings {
 "LatestAutopilotAgilityProductVersion"="10.0.26200.7462"
 "CloudAssignedLanguage"=""
 "CloudAssignedRegion"=""
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning\Diagnostics\Autopilot\DefaultEvaluationOrder]
 "PolicySourceName_2"="AutoPilotPolicySource::Registry"
 "PolicySourceName_8"="AutoPilotPolicySource::DdsZtd"
 "PolicySourceName_4"="AutoPilotPolicySource::RipAndReuse"
 "DefaultPolicyOrder"="2;8;4"
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning\AutopilotTpmEnhancedLogging]
 "05F02597-FE85-4E67-8542-69567AB8FD4F"="Microsoft-Windows-LiveId"
 "1D6540CE-A81B-4E74-AD35-EEF8463F97F5"="NGC_PoP"
@@ -342,6 +347,7 @@ function Set-PowerUserSettings {
 "89F392FF-EE7C-56A3-3F61-2D5B31A36935"="Microsoft.Windows.Security.NGC.CS"
 "9B223F67-67A1-5B53-9126-4593FE81DF25"="NGC_PoP_Key_And_Task"
 "a935c211-645a-5f5a-4527-778da45bbba5"="Microsoft.Tpm.HealthAttestationCertificateTask"
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Yann]
 "post-setup-script"="1.3.1"
 "Windows Languages Packs"="1.3.1"
@@ -352,16 +358,85 @@ function Set-PowerUserSettings {
 "@
     # edit reg file
 # Write the registry changes to a file and silently import it using regedit
-    Set-Content -Path "$env:TEMP\Recommended_Privacy_Settings.reg" -Value $MultilineComment -Force
-    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\Recommended_Privacy_Settings.reg`"" -NoNewWindow -Wait
-        Write-Host "Recommended Privacy Settings Applied." -ForegroundColor Green
+    Set-Content -Path "$env:TEMP\Corporate_Privacy_Settings.reg" -Value $MultilineComment -Force
+    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\Corporate_Privacy_Settings.reg`"" -NoNewWindow -Wait
+        Write-Host "Corporate Privacy Settings Applied." -ForegroundColor Green
     }
+
+# Sets Corporate Setting for Windows Home
+function Set-HomeSettings {
+    
+    # Enable UAC and set the default prompt behavior
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 1 /f 2>&1 | Out-Null
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v ConsentPromptBehaviorAdmin /t REG_DWORD /d 2 /f 2>&1 | Out-Null
+    Write-Host "UAC has been enabled successfully." -ForegroundColor Green
+     Write-Host "Applying PowerUser Settings . . ."
+
+
+    $MultilineComment = @"
+	Windows Registry Editor Version 5.00
+
+[HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer]
+"NoStartMenuMorePrograms"=dword:00000000
+
+[HKEY_CLASSES_ROOT\*\shell\TakeOwnership]
+@="Take Ownership"
+"HasLUAShield"=""
+"NoWorkingDirectory"=""
+"NeverDefault"=""
+
+[HKEY_CLASSES_ROOT\*\shell\TakeOwnership\command]
+@="powershell -windowstyle hidden -command \"Start-Process cmd -ArgumentList '/c takeown /f \\\"%1\\\" && icacls \\\"%1\\\" /grant *S-1-3-4:F /t /c /l & pause' -Verb runAs\""
+"IsolatedCommand"="powershell -windowstyle hidden -command \"Start-Process cmd -ArgumentList '/c takeown /f \\\"%1\\\" && icacls \\\"%1\\\" /grant *S-1-3-4:F /t /c /l & pause' -Verb runAs\""
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\System]
+"EnableCdp"=dword:00000001
+
+[HKCU\Software\Microsoft\Windows\CurrentVersion\CDP]
+"CdpSessionUserAuthzPolicy"=dword:00000001
+
+[HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\CDP]
+"RomeSdkChannelUserAuthzPolicy"=dword:00000001
+
+[HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
+"DisableTelemetry"=dword:00000001
+
+[HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
+"DisableTelemetry"=dword:00000001
+
+[HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
+"DisableTelemetry"=dword:00000001
+
+[HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
+"VerboseLogging"=dword:00000003
+
+[HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
+"VerboseLogging"=dword:00000000
+
+[HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
+"VerboseLogging"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning]
+"FirstRunComplete"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Yann]
+"post-setup-script"="1.3.1"
+"Windows Languages Packs"="1.3.1"
+"Microsoft Office 365 Apps for Home Premium (Offline)"=-
+"first-logon-script"="1.3.1"
+"windows-customization-machine"="1.3.1"
+"software-customization"="1.3.1"
+"@
+    # edit reg file
+# Write the registry changes to a file and silently import it using regedit
+    Set-Content -Path "$env:TEMP\Home_Privacy_Settings.reg" -Value $MultilineComment -Force
+    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\Home_Privacy_Settings.reg`"" -NoNewWindow -Wait
+        Write-Host "Windows Home Privacy Settings Applied." -ForegroundColor Green
+    }
+
+
 # Restore default power plans and enable hibernate
 function Set-DefaultPowerSetting {
-  
-    Set-Content -Path "$env:TEMP\Windows_Apps.reg" -Value $MultilineComment -Force -ErrorAction SilentlyContinue
-    Regedit.exe /S "$env:TEMP\Windows_Apps.reg" -Force -ErrorAction SilentlyContinue
-	    cmd /c "powercfg /hibernate on"
 
     # Registry modifications
     $regChanges = @(
@@ -381,6 +456,7 @@ function Set-DefaultPowerSetting {
     Write-Host "Default Power Settings Applied." -ForegroundColor Green
     return
 }
+
 # Function to Apply the Recommended Privacy Settings
 function Set-RecommendedPrivacySettings {
      
@@ -905,6 +981,7 @@ LetAppsSyncWithDevices=dword:00000002
     Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\Recommended_Privacy_Settings.reg`"" -NoNewWindow -Wait
         Write-Host "Recommended Privacy Settings Applied." -ForegroundColor Green
     }
+
 # Start of Windows Update Functions
 function Set-RecommendedUpdateSettings {
 
@@ -969,6 +1046,7 @@ rem 0 - Do not deactivate Malicious Software Removal Tool offered via Windows Up
         Write-Host "Recommended Windows Update Settings Applied." -ForegroundColor Green
 }
 # End of Windows Update Functions
+
 # Start of Registry Optimizations
 # Recommended Local Machine Registry Settings
 function Set-RecommendedHKLMRegistry {
@@ -1379,6 +1457,7 @@ ExecutionPolicy=Unrestricted'
     Write-Host "Recommended Local Machine Registry Settings Applied."
 
 }
+
 # Clears Copilot
 function Set-CopilotOut {
     # Unsistall Copilot Packages
@@ -1458,6 +1537,7 @@ Windows Registry Editor Version 5.00
     Write-Host "Recommended Local Machine Registry Settings Applied." -ForegroundColor Green
 }
 # End of Copilot removal
+
 # Default Local Machine Registry Settings
 function Set-DefaultHKLMRegistry {
 		        Write-Host "Restoring Recommended Local Machine Registry Settings . . ."
@@ -1697,6 +1777,617 @@ Windows Registry Editor Version 5.00
     Write-Host "Default Local Machine Registry Settings Applied." -ForegroundColor Green
     
 }
+
+
+# Default Local Machine Registry Settings
+function Set-DefaultUserRegistry {
+		        Write-Host "Restoring Default User Registry Settings . . ."
+    # create reg file
+    $MultilineComment = @"
+Windows Registry Editor Version 5.00
+
+; --LEGACY CONTROL PANEL--
+; EASE OF ACCESS
+; narrator
+[HKEY_CURRENT_USER\Software\Microsoft\Narrator\NoRoam]
+"DuckAudio"=-
+"WinEnterLaunchEnabled"=-
+"ScriptingEnabled"=-
+"OnlineServicesEnabled"=-
+"EchoToggleKeys"=-
+
+; narrator settings
+[HKEY_CURRENT_USER\Software\Microsoft\Narrator]
+"NarratorCursorHighlight"=-
+"CoupleNarratorCursorKeyboard"=-
+"IntonationPause"=-
+"ReadHints"=-
+"ErrorNotificationType"=-
+"EchoChars"=-
+"EchoWords"=-
+
+[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Narrator\NarratorHome]
+
+; ease of access settings
+[-HKEY_CURRENT_USER\Software\Microsoft\Ease of Access]
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility]
+"Sound on Activation"=-
+"Warning Sounds"=-
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast]
+"Flags"="126"
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response]
+"Flags"="126"
+"AutoRepeatRate"="500"
+"AutoRepeatDelay"="1000"
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\MouseKeys]
+"Flags"="62"
+"MaximumSpeed"="80"
+"TimeToMaximumSpeed"="3000"
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\StickyKeys]
+"Flags"="510"
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\ToggleKeys]
+"Flags"="62"
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\SoundSentry]
+"Flags"="2"
+"FSTextEffect"="0"
+"TextEffect"="0"
+"WindowsEffect"="1"
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\SlateLaunch]
+"ATapp"="narrator"
+"LaunchAT"=dword:00000001
+
+; CLOCK AND REGION
+; notify me when the clock changes
+[-HKEY_CURRENT_USER\Control Panel\TimeDate]
+
+; APPEARANCE AND PERSONALIZATION
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"LaunchTo"=-
+"HideFileExt"=dword:00000001
+"FolderContentsInfoTip"=-
+"ShowInfoTip"=dword:00000001
+"ShowPreviewHandlers"=-
+"ShowStatusBar"=dword:00000001
+"ShowSyncProviderNotifications"=-
+"SharingWizardOn"=-
+"TaskbarAnimations"=dword:1
+"IconsOnly"=dword:0
+"ListviewAlphaSelect"=dword:1
+"ListviewShadow"=dword:1
+"Start_Layout"=-
+"Start_AccountNotifications"=-
+"Start_TrackDocs"=-
+"TaskbarAl"=-
+"TaskbarMn"=-
+"ShowTaskViewButton"=-
+"ShowCopilotButton"=-
+"Start_IrisRecommendations"=-
+"TaskbarSn"=-
+"SnapAssist"=-
+"DITest"=-
+"EnableSnapBar"=-
+"EnableTaskGroups"=-
+"EnableSnapAssistFlyout"=-
+"SnapFill"=-
+"JointResize"=-
+"MultiTaskingAltTabFilter"=-
+
+; frequent folders in quick access
+; show files from office.com
+; don't show all taskbar icons
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer]
+"ShowFrequent"=-
+"ShowCloudFilesInQuickAccess"=-
+"EnableAutoTray"=-
+
+; display full path in the title bar
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState]
+"FullPath"=dword:00000000
+
+; HARDWARE AND SOUND
+; sound communications
+[HKEY_CURRENT_USER\Software\Microsoft\Multimedia\Audio]
+"UserDuckingPreference"=-
+
+; enhance pointer precision
+; mouse (default accel with epp on)
+[HKEY_CURRENT_USER\Control Panel\Mouse]
+"MouseSpeed"="1"
+"MouseThreshold1"="6"
+"MouseThreshold2"="10"
+"MouseSensitivity"="10"
+"SmoothMouseXCurve"=hex:00,00,00,00,00,00,00,00,15,6e,00,00,00,00,00,00,00,40,\
+  01,00,00,00,00,00,29,dc,03,00,00,00,00,00,00,00,28,00,00,00,00,00
+"SmoothMouseYCurve"=hex:00,00,00,00,00,00,00,00,fd,11,01,00,00,00,00,00,00,24,\
+  04,00,00,00,00,00,00,fc,12,00,00,00,00,00,00,c0,bb,01,00,00,00,00
+
+; SYSTEM AND SECURITY
+; set appearance options
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects]
+"VisualFXSetting"=-
+
+; animate controls and elements inside windows
+; fade or slide menus into view
+; fade or slide tooltips into view
+; fade out menu items after clicking
+; show shadows under mouse pointer
+; show shadows under windows
+; slide open combo boxes
+; smooth-scroll list boxes
+; smooth edges of screen fonts
+; dpi scaling
+; fix scaling for apps
+; menu show delay
+[HKEY_CURRENT_USER\Control Panel\Desktop]
+"UserPreferencesMask"=hex(2):9e,1e,07,80,12,00,00,00
+"FontSmoothing"="2"
+"LogPixels"=-
+"Win8DpiScaling"=dword:00000000
+"EnablePerProcessSystemDPI"=-
+"MenuShowDelay"="400"
+
+; --IMMERSIVE CONTROL PANEL--
+; PRIVACY
+; show me notification in the settings app
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\SystemSettings\AccountNotifications]
+"EnableAccountNotifications"=-
+
+; allow location override
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CPSS\Store\UserLocationOverridePrivacySetting]
+"Value"=dword:00000001
+
+; voice activation
+[-HKEY_CURRENT_USER\Software\Microsoft\Speech_OneCore\Settings]
+
+; other devices 
+[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\bluetoothSync]
+
+; let websites show me locally relevant content by accessing my language list 
+[HKEY_CURRENT_USER\Control Panel\International\User Profile]
+"HttpAcceptLanguageOptOut"=-
+
+; let windows improve start and search results by tracking app launches  
+[-HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\EdgeUI]
+
+; personal inking and typing dictionary
+[HKEY_CURRENT_USER\Software\Microsoft\InputPersonalization]
+"RestrictImplicitInkCollection"=dword:00000000
+"RestrictImplicitTextCollection"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\InputPersonalization\TrainedDataStore]
+"HarvestContacts"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Personalization\Settings]
+"AcceptedPrivacyPolicy"=dword:00000001
+
+; feedback frequency
+[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Siuf]
+
+; SEARCH
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\SearchSettings]
+"IsDynamicSearchBoxEnabled"=-
+"IsDeviceSearchHistoryEnabled"=-
+"SafeSearchMode"=-
+"IsAADCloudSearchEnabled"=-
+"IsMSACloudSearchEnabled"=-
+
+; EASE OF ACCESS
+; magnifier settings 
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\ScreenMagnifier]
+"FollowCaret"=-
+"FollowNarrator"=-
+"FollowMouse"=-
+"FollowFocus"=-
+
+; GAMING
+; game bar
+[HKEY_CURRENT_USER\System\GameConfigStore]
+"GameDVR_Enabled"=dword:00000000
+
+; enable open xbox game bar using game controller
+; game mode
+[HKEY_CURRENT_USER\Software\Microsoft\GameBar]
+"UseNexusForGameBarEnabled"=-
+"AutoGameModeEnabled"=-
+
+; other settings
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\GameDVR]
+"AppCaptureEnabled"=-
+"AudioEncodingBitrate"=-
+"AudioCaptureEnabled"=-
+"CustomVideoEncodingBitrate"=-
+"CustomVideoEncodingHeight"=-
+"CustomVideoEncodingWidth"=-
+"HistoricalBufferLength"=-
+"HistoricalBufferLengthUnit"=-
+"HistoricalCaptureEnabled"=-
+"HistoricalCaptureOnBatteryAllowed"=-
+"HistoricalCaptureOnWirelessDisplayAllowed"=-
+"MaximumRecordLength"=-
+"VideoEncodingBitrateMode"=-
+"VideoEncodingResolutionMode"=-
+"VideoEncodingFrameRateMode"=-
+"EchoCancellationEnabled"=-
+"CursorCaptureEnabled"=-
+"VKToggleGameBar"=-
+"VKMToggleGameBar"=-
+"VKSaveHistoricalVideo"=-
+"VKMSaveHistoricalVideo"=-
+"VKToggleRecording"=-
+"VKMToggleRecording"=-
+"VKTakeScreenshot"=-
+"VKMTakeScreenshot"=-
+"VKToggleRecordingIndicator"=-
+"VKMToggleRecordingIndicator"=-
+"VKToggleMicrophoneCapture"=-
+"VKMToggleMicrophoneCapture"=-
+"VKToggleCameraCapture"=-
+"VKMToggleCameraCapture"=-
+"VKToggleBroadcast"=-
+"VKMToggleBroadcast"=-
+"MicrophoneCaptureEnabled"=-
+"SystemAudioGain"=-
+"MicrophoneGain"=-
+
+; TIME & LANGUAGE 
+; show the voice typing mic button
+; typing insights
+[HKEY_CURRENT_USER\Software\Microsoft\input\Settings]
+"IsVoiceTypingKeyEnabled"=-
+"InsightsEnabled"=-
+
+; capitalize the first letter of each sentence
+; play key sounds as i type
+; add a period after i double-tap the spacebar
+; show key background
+[HKEY_CURRENT_USER\Software\Microsoft\TabletTip\1.7]
+"EnableAutoShiftEngage"=-
+"EnableKeyAudioFeedback"=-
+"EnableDoubleTapSpace"=-
+"IsKeyBackgroundEnabled"=-
+
+; PERSONALIZATION
+; light theme 
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize]
+"AppsUseLightTheme"=dword:00000001
+"SystemUsesLightTheme"=dword:00000001
+
+[-HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\Explorer]
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer]
+
+; search from taskbar
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Search]
+"SearchboxTaskbarMode"=-
+
+; meet now
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer]
+
+; use dynamic lighting on my devices
+; compatible apps in the forground always control lighting
+; match my windows accent color
+[HKEY_CURRENT_USER\Software\Microsoft\Lighting]
+"AmbientLightingEnabled"=dword:00000001
+"ControlledByForegroundApp"=-
+"UseSystemAccentColor"=dword:00000001
+
+; DEVICES
+; let windows manage my default printer
+[HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\Windows]
+"LegacyDefaultPrinterMode"=dword:ffffffff
+
+; write with your fingertip
+[-HKEY_CURRENT_USER\Software\Microsoft\TabletTip\EmbeddedInkControl]
+
+; SYSTEM
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\DWM]
+"UseDpiScaling"=-
+
+; variable refresh rate & optimizations for windowed games
+[HKEY_CURRENT_USER\Software\Microsoft\DirectX\UserGpuPreferences]
+"DirectXUserGlobalSettings"=-
+
+; Notification defaults
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\PushNotifications]
+"ToastEnabled"=-
+"LockScreenToastEnabled"=-
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Notifications\Settings]
+"NOC_GLOBAL_SETTING_ALLOW_NOTIFICATION_SOUND"=-
+"NOC_GLOBAL_SETTING_ALLOW_TOASTS_ABOVE_LOCK"=-
+"NOC_GLOBAL_SETTING_ALLOW_CRITICAL_TOASTS_ABOVE_LOCK"=-
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Notifications\Settings\Windows.SystemToast.SecurityAndMaintenance]
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Notifications\Settings\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel]
+"Enabled"=-
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Notifications\Settings\Windows.SystemToast.CapabilityAccess]
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Notifications\Settings\Windows.SystemToast.StartupApp]
+"Enabled"=dword:00000000
+
+[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\UserProfileEngagement]
+
+; suggested actions
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\SmartActionPlatform\SmartClipboard]
+"Disabled"=-
+
+; battery options optimize
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\VideoSettings]
+
+; UWP APPS
+; disable windows input experience preload
+[HKEY_CURRENT_USER\Software\Microsoft\input]
+"IsInputAppPreloadEnabled"=-
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Dsh]
+
+; ADVERTISING & PROMOTIONAL
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"ContentDeliveryAllowed"=dword:00000001
+"FeatureManagementEnabled"=dword:00000001
+"OemPreInstalledAppsEnabled"=dword:00000001
+"PreInstalledAppsEnabled"=dword:00000001
+"PreInstalledAppsEverEnabled"=dword:00000001
+"RotatingLockScreenEnabled"=dword:00000001
+"RotatingLockScreenOverlayEnabled"=dword:00000001
+"SilentInstalledAppsEnabled"=dword:00000001
+"SlideshowEnabled"=dword:00000001
+"SoftLandingEnabled"=dword:00000001
+"SubscribedContent-310093Enabled"=-
+"SubscribedContent-314563Enabled"=-
+"SubscribedContent-338388Enabled"=-
+"SubscribedContent-338389Enabled"=-
+"SubscribedContent-338393Enabled"=-
+"SubscribedContent-353694Enabled"=-
+"SubscribedContent-353696Enabled"=-
+"SubscribedContent-353698Enabled"=-
+"SubscribedContentEnabled"=dword:00000001
+"SystemPaneSuggestionsEnabled"=dword:00000001
+
+; OTHER
+; gallery
+[-HKEY_CURRENT_USER\Software\Classes\CLSID\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}]
+
+; context menu
+[-HKEY_CURRENT_USER\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}]
+
+[HKEY_USERS\.DEFAULT\Control Panel\Keyboard]
+"InitialKeyboardIndicators"="2"
+"KeyboardDelay"="1"
+"KeyboardSpeed"="31"
+
+[HKEY_USERS\.DEFAULT\Control Panel\Mouse]
+"ActiveWindowTracking"=dword:00000000
+"DoubleClickHeight"="4"
+"DoubleClickSpeed"="500"
+"DoubleClickWidth"="4"
+"MouseSensitivity"="10"
+"MouseSpeed"="1"
+"MouseThreshold1"="6"
+"SmoothMouseXCurve"=hex:00,00,00,00,00,00,00,00,15,6e,00,00,00,00,00,00,00,40,\
+  01,00,00,00,00,00,29,dc,03,00,00,00,00,00,00,00,28,00,00,00,00,00
+"SmoothMouseYCurve"=hex:00,00,00,00,00,00,00,00,b8,5e,01,00,00,00,00,00,cd,4c,\
+  05,00,00,00,00,00,cd,4c,18,00,00,00,00,00,00,00,38,02,00,00,00,00
+"MouseThreshold2"="10"
+"SnapToDefaultButton"="0"
+"SwapMouseButtons"="0"
+
+[HKEY_USERS\.DEFAULT\Control Panel\Sound]
+"Beep"="yes"
+"ExtendedSounds"="yes"
+
+[HKEY_USERS\.DEFAULT\Software\Microsoft\Windows NT\CurrentVersion\Program Manager\Restrictions]
+"EditLevel"=dword:00000000
+"NoClose"=dword:00000000
+"NoFileMenu"=dword:00000000
+"NoRun"=dword:00000000
+"NoSaveSettings"=dword:00000000
+"Restrictions"=dword:00000000
+
+[HKEY_USERS\.DEFAULT\Software\Microsoft\Windows NT\CurrentVersion\Winlogon]
+"ParseAutoexec"="0"
+"ExcludeProfileDirs"="Local Settings;Temporary Internet Files;Historique;Temp"
+"BuildNumber"=dword:00000a28
+
+[HKEY_CURRENT_USER\Control Panel\Colors]
+"ActiveBorder"="180 180 180"
+"ActiveTitle"="153 180 209"
+"AppWorkspace"="171 171 171"
+"Background"="0 0 0"
+"ButtonAlternateFace"="0 0 0"
+"ButtonDkShadow"="105 105 105"
+"ButtonFace"="240 240 240"
+"ButtonHilight"="255 255 255"
+"ButtonLight"="227 227 227"
+"ButtonShadow"="160 160 160"
+"ButtonText"="0 0 0"
+"GradientActiveTitle"="185 209 234"
+"GradientInactiveTitle"="215 228 242"
+"GrayText"="109 109 109"
+"Hilight"="0 120 212"
+"HilightText"="255 255 255"
+"HotTrackingColor"="0 102 204"
+"InactiveBorder"="244 247 252"
+"InactiveTitle"="191 205 219"
+"InactiveTitleText"="0 0 0"
+"InfoText"="0 0 0"
+"InfoWindow"="255 255 225"
+"Menu"="240 240 240"
+"MenuBar"="240 240 240"
+"MenuHilight"="0 120 212"
+"MenuText"="0 0 0"
+"Scrollbar"="200 200 200"
+"TitleText"="0 0 0"
+"Window"="255 255 255"
+"WindowFrame"="100 100 100"
+"WindowText"="0 0 0"
+
+[HKEY_CURRENT_USER\Control Panel\Cursors]
+"AppStarting"="C:\\WINDOWS\\cursors\\aero_working.ani"
+"Arrow"="C:\\WINDOWS\\cursors\\aero_arrow.cur"
+"ContactVisualization"=dword:00000001
+"Crosshair"=""
+"CursorBaseSize"=dword:00000020
+"GestureVisualization"=dword:0000001f
+"Hand"="C:\\WINDOWS\\cursors\\aero_link.cur"
+"Help"="C:\\WINDOWS\\cursors\\aero_helpsel.cur"
+"IBeam"=""
+"No"="C:\\WINDOWS\\cursors\\aero_unavail.cur"
+"NWPen"="C:\\WINDOWS\\cursors\\aero_pen.cur"
+"Scheme Source"=dword:00000002
+"SizeAll"="C:\\WINDOWS\\cursors\\aero_move.cur"
+"SizeNESW"="C:\\WINDOWS\\cursors\\aero_nesw.cur"
+"SizeNS"="C:\\WINDOWS\\cursors\\aero_ns.cur"
+"SizeNWSE"="C:\\WINDOWS\\cursors\\aero_nwse.cur"
+"SizeWE"="C:\\WINDOWS\\cursors\\aero_ew.cur"
+"UpArrow"="C:\\WINDOWS\\cursors\\aero_up.cur"
+"Wait"="C:\\WINDOWS\\cursors\\aero_busy.ani"
+@="Windows Default"
+
+[HKEY_CURRENT_USER\Control Panel\Desktop]
+"BlockSendInputResets"="0"
+"CaretTimeout"=dword:00001388
+"CaretWidth"=dword:00000001
+"ClickLockTime"=dword:000004b0
+"CoolSwitchColumns"="7"
+"CoolSwitchRows"="3"
+"CursorBlinkRate"="530"
+"DockMoving"="1"
+"DragFromMaximize"="1"
+"DragFullWindows"="1"
+"DragHeight"="4"
+"DragWidth"="4"
+"FocusBorderHeight"=dword:00000001
+"FocusBorderWidth"=dword:00000001
+"FontSmoothing"="2"
+"FontSmoothingGamma"=dword:00000000
+"FontSmoothingOrientation"=dword:00000001
+"FontSmoothingType"=dword:00000002
+"ForegroundFlashCount"=dword:00000007
+"ForegroundLockTimeout"=dword:00030d40
+"LeftOverlapChars"="3"
+"MenuShowDelay"="200"
+"MouseWheelRouting"=dword:00000002
+"PaintDesktopVersion"=dword:00000000
+"Pattern"=dword:00000000
+"RightOverlapChars"="3"
+"ScreenSaveActive"=dword:00000001
+"SnapSizing"="1"
+"TileWallpaper"="0"
+"WheelScrollChars"="3"
+"WheelScrollLines"="3"
+"WindowArrangementActive"="1"
+"Win8DpiScaling"=dword:00000001
+"DpiScalingVer"=dword:00001000
+"UserPreferencesMask"=hex:90,12,03,80,10,00,00,00
+"MaxVirtualDesktopDimension"=dword:00000780
+"MaxMonitorDimension"=dword:00000780
+"TranscodedImageCount"=dword:00000001
+"LastUpdated"=dword:ffffffff
+"LogPixels"=dword:00000060
+"Pattern Upgrade"="TRUE"
+"LockScreenAutoLockActive"="1"
+"ScreenSaverIsSecure"=dword:00000001
+"ScreenSaveTimeOut"=dword:000000fa
+"AutoEndTasks"=dword:00000001
+"HungAppTimeout"="4000"
+"WaitToKillAppTimeout"="4000"
+"JPEGImportQuality"=dword:00000064
+"DstNotification"=dword:00000001
+"DelayLockInterval"=dword:00000000
+"AutoColorization"=dword:00000000
+"ImageColor"=dword:afd4e846
+
+[HKEY_CURRENT_USER\Control Panel\Desktop\Colors]
+"ActiveBorder"="212 208 200"
+"ActiveTitle"="10 36 106"
+"AppWorkSpace"="128 128 128"
+"ButtonAlternateFace"="181 181 181"
+"ButtonDkShadow"="64 64 64"
+"ButtonFace"="212 208 200"
+"ButtonHiLight"="255 255 255"
+"ButtonLight"="212 208 200"
+"ButtonShadow"="128 128 128"
+"ButtonText"="0 0 0"
+"GradientActiveTitle"="166 202 240"
+"GradientInactiveTitle"="192 192 192"
+"GrayText"="128 128 128"
+"Hilight"="10 36 106"
+"HilightText"="255 255 255"
+"HotTrackingColor"="0 0 128"
+"InactiveBorder"="212 208 200"
+"InactiveTitle"="128 128 128"
+"InactiveTitleText"="212 208 200"
+"InfoText"="0 0 0"
+"InfoWindow"="255 255 255"
+"Menu"="212 208 200"
+"MenuText"="0 0 0"
+"Scrollbar"="212 208 200"
+"TitleText"="255 255 255"
+"Window"="255 255 255"
+"WindowFrame"="0 0 0"
+"WindowText"="0 0 0"
+
+[HKEY_CURRENT_USER\Control Panel\Keyboard]
+"InitialKeyboardIndicators"="2"
+"KeyboardDelay"="1"
+"KeyboardSpeed"="31"
+
+[HKEY_CURRENT_USER\Control Panel\Mouse]
+"ActiveWindowTracking"=dword:00000001
+"Beep"="No"
+"DoubleClickHeight"="4"
+"DoubleClickSpeed"="500"
+"DoubleClickWidth"="4"
+"ExtendedSounds"="No"
+"MouseHoverHeight"="4"
+"MouseHoverTime"="400"
+"MouseHoverWidth"="4"
+"MouseSensitivity"="10"
+"MouseSpeed"="7"
+"MouseThreshold1"="6"
+"MouseThreshold2"="10"
+"MouseTrails"="1"
+"SmoothMouseXCurve"=hex:00,00,00,00,00,00,00,00,c0,cc,0c,00,00,00,00,00,80,99,\
+  19,00,00,00,00,00,40,66,26,00,00,00,00,00,00,33,33,00,00,00,00,00
+"SmoothMouseYCurve"=hex:00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,\
+  70,00,00,00,00,00,00,00,a8,00,00,00,00,00,00,00,e0,00,00,00,00,00
+"SnapToDefaultButton"="1"
+"SwapMouseButtons"="0"
+
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\SlateLaunch]
+"ATapp"="narrator"
+"LaunchAT"=dword:00000001
+
+[HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response]
+"AutoRepeatDelay"="1000"
+"AutoRepeatRate"="31"
+"DelayBeforeAcceptance"="1000"
+"Flags"="126"
+"BounceTime"="0"
+"@
+    Set-Content -Path "$env:TEMP\Restore_Default_User_Registry.reg" -Value $MultilineComment -Force
+    # edit reg file
+    $path = "$env:TEMP\Restore_Default_User_Registry.reg"
+                (Get-Content $path) -replace "\?", "$" | Out-File $path
+    # import reg file
+    Regedit.exe /S "$env:TEMP\Restore_Default_User_Registry.reg"
+    
+    Write-Host "Default Local Machine Registry Settings Applied." -ForegroundColor Green
+    
+}
+
 #Optimizing User Registry
 function Set-RecommendedHKCURegistry {
     
@@ -1767,9 +2458,15 @@ Windows Registry Editor Version 5.00
 "Flags"="4194"
 
 [HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response]
-"Flags"="2"
-"AutoRepeatRate"="0"
-"AutoRepeatDelay"="0"
+AutoRepeatDelay=200
+AutoRepeatRate=6
+"BounceTime"="0"
+"DelayBeforeAcceptance"="500"
+"Flags"="58"
+"Last BounceKey Setting"=dword:00000000
+"Last Valid Delay"=dword:00000000
+"Last Valid Repeat"=dword:00000200
+"Last Valid Wait"=dword:000003e8
 
 [HKEY_CURRENT_USER\Control Panel\Accessibility\MouseKeys]
 "Flags"="130"
@@ -1783,14 +2480,15 @@ Windows Registry Editor Version 5.00
 "Flags"="34"
 
 [HKEY_CURRENT_USER\Control Panel\Accessibility\SoundSentry]
-"Flags"="0"
-"FSTextEffect"="0"
-"TextEffect"="0"
-"WindowsEffect"="0"
+"Flags"="3"
+"FSTextEffect"="1"
+"TextEffect"="1"
+"WindowsEffect"="1"
 
+; launches the onscreen keyboard when pressind windows key and volume up
 [HKEY_CURRENT_USER\Control Panel\Accessibility\SlateLaunch]
-"ATapp"=""
-"LaunchAT"=dword:00000000
+"ATapp"="osk"
+"LaunchAT"=dword:00000001
 
 ; CLOCK AND REGION
 ; disable notify me when the clock changes
@@ -2503,17 +3201,6 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Preference]
 "On"="0"
-
-[HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response]
-"AutoRepeatDelay"="0"
-"AutoRepeatRate"="0"
-"BounceTime"="0"
-"DelayBeforeAcceptance"="500"
-"Flags"="2"
-"Last BounceKey Setting"=dword:00000000
-"Last Valid Delay"=dword:00000000
-"Last Valid Repeat"=dword:00000000
-"Last Valid Wait"=dword:000003e8
 
 [HKEY_CURRENT_USER\Control Panel\Accessibility\MouseKeys]
 "Flags"="130"
@@ -4139,6 +4826,7 @@ Windows Registry Editor Version 5.00
     Write-Host "Recommended User Registry Settings Applied." -ForegroundColor Green
     
 }
+
 # Clears WU
 function Set-Wupdatecleaned {
     Start-Process cmd -ArgumentList '/s,/c,net stop usosvc 
@@ -4184,8 +4872,7 @@ catch {}
     Start-Process -FilePath "C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow
     # for debug purpose
     # C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.ps1
-} 
-
+}
 # Copied Files from Usb Stick to Setup Folder
 
 # Find Usb Installation path
@@ -4241,7 +4928,8 @@ $ErrorActionPreference = 'Continue'
 # for debug purpose
 # C:\Windows\Setup\Files\post-setup\Deploy-Application.ps1
 
-} 
+}
+
 # Find Usb Installation path
 function TaskBarIcons {
 $UsbFolderPath = $False;
@@ -4263,6 +4951,7 @@ catch {} if ( !$UsbFolderPath ) { Write-Host "Usb Disk not found!";return; $UsbF
             Expand-Archive -Force "$UsbFolderPath" "$env:PUBLIC\AppData\Roaming\Microsoft\Internet Explorer\Quick Launch\User Pinned" ;
             Write-Host "Taskbar Prepared." -ForegroundColor Green ; @($UsbFolderPath)  ; return ;
 }
+
 # Find Usb Installation path
 function AppsInstallation {
 try {
@@ -4309,6 +4998,56 @@ else { Write-Host "Packages found at $AppsFolderPath ";
 
     $ErrorActionPreference = 'Continue';
     }
+}
+
+function TeleMetry {	
+     Write-Host "Applying Recommended Telemetry Settings . . ."
+    # Registry modifications
+    $regChanges = @(
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v DoNotShowFeedbackNotifications /t REG_DWORD /d 1',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v LimitDiagnosticLogCollection /t REG_DWORD /d 1',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v DisableOneSettingsDownloads /t REG_DWORD /d 0',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v DisableDeviceDelete /t REG_DWORD /d 0',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v DisableDiagnosticDataViewer /t REG_DWORD /d 0',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v LimitDumpCollection /t REG_DWORD /d 1',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v LimitEnhancedDiagnosticDataWindowsAnalytics /t REG_DWORD /d 0',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v DisableTelemetryOptInSettingsUx /t REG_DWORD /d 0',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v EnableOneSettingsAuditing /t REG_DWORD /d 0',
+        'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\DataCollection /v DisableTelemetryOptInChangeNotification /t REG_DWORD /d 0',
+        'HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry /v DisableTelemetry /t REG_DWORD /d 1',
+        'HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry /v DisableTelemetry /t REG_DWORD /d 1',
+        'HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry /v DisableTelemetry /t REG_DWORD /d 1',
+        'HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry /v VerboseLogging /t REG_DWORD /d 0',
+        'HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry /v VerboseLogging /t REG_DWORD /d 0',
+        'HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry /v VerboseLogging /t REG_DWORD /d 0'
+
+    )
+
+    foreach ($reg in $regChanges) {
+        cmd /c "reg add $reg /f" -Force -ErrorAction Continue
+    }
+
+    Write-Host "Recommended Telemetry Settings Applied." -ForegroundColor Green
+    return
+}
+
+# Function to Optimize Nvme
+function OptimizeNvme {	
+     Write-Host "Applying Nvme Settings . . ."
+    # Registry modifications
+    $regChanges = @(
+        'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides /v 3244671118 /t REG_DWORD /d 1',
+        'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides /v 1853569164 /t REG_DWORD /d 1',
+        'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides /v 156965516 /t REG_DWORD /d 1'
+
+    )
+
+    foreach ($reg in $regChanges) {
+        cmd /c "reg add $reg /f" -Force -ErrorAction Continue
+    }
+
+    Write-Host "Recommended Nvme Settings Applied." -ForegroundColor Green
+    return
 }
 
 # Function to Enable Windows Defender
@@ -4370,17 +5109,21 @@ function Enable-WindowsDefender {
 Remove-Shortcuts
 Disable-WindowsDefender
 CreateInstShortcut
-Set-PowerUserSettings
+#Set-CorporateSettings
+Set-HomeSettings
 Set-RecommendedPrivacySettings
-Set-RecommendedUpdateSettings
 Set-RecommendedHKLMRegistry
-#Set-DefaultHKLMRegistry
 Set-RecommendedHKCURegistry
+#et-DefaultUserRegistry
+#Set-DefaultHKLMRegistry
 Set-CopilotOut
 Set-Wupdatecleaned
 Get-UsbStickDrive
 StartYannSetup
 AppsInstallation
+TeleMetry
+Set-RecommendedUpdateSettings
+#OptimizeNvme
 Enable-WindowsDefender
 
 Write-Host "Done; Please restart to apply changes"
