@@ -2,7 +2,7 @@
 #
 # Yann Duchateau
 # 
-# 2026-03-21 - 1.3.1
+# 2026-03-26 - 1.3.1
 Set-ExecutionPolicy -Scope CurrentUser Unrestricted -Force -ErrorAction SilentlyContinue
 import-module dism
 import-module Appx
@@ -992,14 +992,14 @@ Windows Registry Editor Version 5.00
 
 ; --Windows Update Settings--
 
-; Disable Automatic Updates (Only Check for Updates Manually)
+; Enables Automatic Updates (Only Check for Updates Manually)
 ; Notify Before Downloading and Installing Updates
 ; Enable Notifications for Security Updates (Auto-Download)
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU]
 "NoAutoUpdate"=dword:00000000
 "AUOptions"=dword:00000002
-"AutoInstallMinorUpdates"=dword:00000000
+"AutoInstallMinorUpdates"=dword:00000001
 
 ; ................................... Windows update Options ............................. 
 
@@ -1025,19 +1025,17 @@ rem 0 - Do not deactivate Malicious Software Removal Tool offered via Windows Up
 ; 1 - Gets or sends updates and apps to PCs on the same NAT only 
 ; 2 - Gets or sends updates and apps to PCs on the same local network domain
 ; 3 - Gets or sends updates and apps to PCs on the Internet 
-; 99 - Simple download mode with no peering 
+; 99 (hex 63) - Simple download mode with no peering 
 ; 100 - Use BITS instead of Windows Update Delivery Optimization 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\DeliveryOptimization\Config]
-"DODownloadMode"=dword:00000001
+"DODownloadMode"=dword:00000063
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization]
-"DODownloadMode"=dword:00000001
+"DODownloadMode"=dword:00000063
+
 ; Update apps automatically / 2 - Off / 4 - On 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsStore\WindowsUpdate]
 "AutoDownload"=dword:00000004
-
-; Disables allowing downloads from other PCs (Delivery Optimization)
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization]
-"DODownloadMode"=dword:00000000
 "@
     Set-Content -Path "$env:TEMP\Recommended_Windows_Update_Settings.reg" -Value $MultilineComment -Force
     # import reg file
