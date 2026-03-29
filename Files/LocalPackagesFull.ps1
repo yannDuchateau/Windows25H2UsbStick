@@ -1,4 +1,4 @@
-﻿Set-ExecutionPolicy Unrestricted -Force -ErrorAction SilentlyContinue
+Set-ExecutionPolicy -Scope CurrentUser Unrestricted -Force -ErrorAction SilentlyContinue
 Import-Module Appx
 Import-Module Dism
 
@@ -40,7 +40,6 @@ Add-AppxPackage -Path "$localFolderPath\Microsoft.UI.Xaml.x64.2.8.appx"
 Add-AppxPackage -Path $localFolderPath\Microsoft.VCLibs.140.00.UWPDesktop_14.0.33728.0_x64__8wekyb3d8bbwe.Appx
 Add-AppxPackage -Path $localFolderPath\Microsoft.VCLibs.140.00_14.0.33519.0_x64__8wekyb3d8bbwe.Appx
 Add-AppxPackage -Path $localFolderPath\Microsoft.VCLibs.x64.14.00.appx
-# Add-AppxPackage -Path $localFolderPath\Microsoft.VCLibs.x64.14.00.UWPDesktop.appx
 Add-AppxPackage -Path $localFolderPath\Microsoft.NET.Native.Framework.x64.2.2.appx
 Add-AppxPackage -Path $localFolderPath\Microsoft.NET.Native.Runtime.x64.2.2.appx
 Add-AppxPackage -Path $localFolderPath\Microsoft.NET.Native.Framework.2.2_2.2.29512.0_x64__8wekyb3d8bbwe.Appx
@@ -65,7 +64,7 @@ Add-AppxPackage -Path $localFolderPath\OutlookPWA.msix
 $ErrorActionPreference = 'Continue';
 }
 
-# internet needed here
+# internet needed here o the Iso Image of OEM Features.
 function installOnlinePackages {
 # Installing Microsoft.Windows.StorageManagement
 # DISM /Online /add-package /packagepath:"$localFolderPath\Microsoft-OneCore-ApplicationModel-Sync-Desktop-FOD-Package~31bf3856ad364e35~amd64~~.cab"
