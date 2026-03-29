@@ -44,8 +44,8 @@ Write-Host 'Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Applicat
 Start-Process -FilePath "C:\Windows\Setup\Files\post-setup\Deploy-Application.exe" -Wait -NoNewWindow
 
 $ErrorActionPreference = 'Continue';
-# Write-Host 'Start-Process -FilePath "C:\Windows\Setup\post-setup\Deploy-Application.ps1" -Wait -NoNewWindow'
-# Start-Process -FilePath "C:\Windows\Setup\Files\post-setup\Deploy-Application.ps1" -Wait -NoNewWindow
+# for debug purpose
+# C:\Windows\Setup\Files\post-setup\Deploy-Application.ps1
 
 Write-Host "Done;"
 Stop-Transcript;
