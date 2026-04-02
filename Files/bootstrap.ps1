@@ -1,6 +1,22 @@
 # bootstrap-script-loader
 #
-# Yann Duchateau
+# Author Yann Duchateau
+# 
+# The Rules in this window setup are:
+# 
+# Install All Good features
+# 
+# Give User full control
+# 
+# NO Artificial Intelligence
+# 
+# Warn if anything happens
+# 
+# Logs all Necessary events, not the useless ones
+# 
+# Backup the Logs before cleaning
+#
+# Cleans the pc regularly
 # 
 # 2028-03-26 - 1.3.1
 Set-ExecutionPolicy -Scope CurrentUser Unrestricted -Force -ErrorAction SilentlyContinue
@@ -15,8 +31,6 @@ Start-Transcript -Path "C:\Windows\Logs\bootstrap$LogDate.ps1.log"
 
 }
 LOgCreate
-import-module dism
-import-module Appx
 
 # Disable-WindowsDefender during Setup
 function Disable-WindowsDefender {
@@ -77,18 +91,20 @@ function Disable-WindowsDefender {
     Write-Host "Windows Defender has been Disabled." -ForegroundColor Green
 }
 
-# Grant Admin access on apps folders 
+# Grant Admin access on apps folders during Setup.
+# Do not forget to give permissions back when done with function Set-Permsys.
 function Set-PermAdm {
     # Wallpaper folders
-    icacls $env:Systemroot\Web\ /setowner Everyone /T /C /Q | Out-Null
-    icacls $env:Systemroot\Web\ /GRANT:r Everyone:F /T /C /Q | Out-Null
+    takeown /f '$env:Systemroot\SystemApps' /a /r /D:J
+    icacls $env:Systemroot\Web\ /inheritance:r /grant:r Administrators:(OI)(CI)F /t /l /q /c | Out-Null
     #AI folders
-    subinacl /subkeyreg "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\" /grant=ADMINISTRATORS=f | Out-Null
-    subinacl /subkeyreg "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall"  /grant=ADMINISTRATORS=f | Out-Null
-    icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\WindowsAI /setowner ADMINISTRATORS /T /C /Q | Out-Null
-    icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\WindowsAI /GRANT:r ADMINISTRATORS:F /T /C /Q | Out-Null
+    takeown /f $env:Systemroot\SystemApps /a /r /D:J
+    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\* /grant=/grant=BUILTIN\ADMINISTRATORS=f | Out-Null
+    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall  /grant=/grant=BUILTIN\ADMINISTRATORS=f | Out-Null
+    icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\WindowsAI /inheritance:r /grant:r /grant=BUILTIN\ADMINISTRATORS:(OI)(CI)F /t /l /q /c | Out-Null
     # apps folder
-    icacls $env:Systemroot\SystemApps /setowner ADMINISTRATORS /T /C /Q | Out-Null
+    takeown /f "$env:Systemroot\SystemApps" /a /r /D:J
+    icacls "$env:Systemroot\SystemApps" /inheritance:r /grant:r "Administrators:(OI)(CI)F" /t /l /q /c | Out-Null
     icacls $env:Systemroot\SystemApps /GRANT:r ADMINISTRATORS:F /T /C /Q | Out-Null
 
     Write-Host "Permissions Granted."   -ForegroundColor Green
@@ -141,7 +157,8 @@ $MultilineComment = @"
         Write-Host "Pass Logon Applied. Will be effective at Next reboot" -ForegroundColor Green
 }
 
-#ReActivate Pin Logon 
+#ReActivate Pin Logon
+#Does not work if pin not set...
 Function Pin-Logon {
 $MultilineComment = @"
 	Windows Registry Editor Version 5.00
@@ -440,7 +457,7 @@ function Remove-Shortcuts {
     Write-Host "Shortcuts has been Removed successfully." -ForegroundColor Green
 }
 
-# OneDrive Desktop Icons 
+# OneDrive Home and Gallery Desktop Icons 
 Function OneDriveDskIcons {
 $MultilineComment = @"
 	Windows Registry Editor Version 5.00
@@ -458,6 +475,313 @@ $MultilineComment = @"
 "@
     Set-Content -Path "$env:TEMP\FewDskIcons.reg" -Value $MultilineComment -Force
     Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\FewDskIcons.reg`"" -NoNewWindow -Wait
+        Write-Host "Fewer Desktop icons Applied. Will be effective at Next reboot" -ForegroundColor Green
+}
+
+Function NoErrorReportIng {
+$MultilineComment = @"
+	Windows Registry Editor Version 5.00
+
+;Windows Error Reporting
+
+;Disable System Debugger Dr. Watson
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug]
+"UserDebuggerHotKey"=dword:00000000
+"Auto"="0"
+
+;1 - Disable Windows Error Reporting WER
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PCHealth\ErrorReporting]
+"DoReport"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"Disabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"Disabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Error Reporting]
+"Disabled"=dword:00000001
+
+;1 - Disable WER sending second-level data
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"DontSendAdditionalData"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"DontSendAdditionalData"=dword:00000001
+
+;1 - Disable WER crash dialogs popups
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PCHealth\ErrorReporting]
+"ShowUI"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"DontShowUI"=-
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"Disabled"=dword:00000001
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"DontSendAdditionalData"=dword:00000001
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"DontShowUI"=dword:00000001
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"LoggingDisabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"DontShowUI"=-
+
+;1 - Disable WER logging
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Windows Error Reporting]
+"LoggingDisabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"LoggingDisabled"=dword:00000001
+
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PCHealth\ErrorReporting]
+"DoReport"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"Disabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Error Reporting]
+"Disabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"DontSendAdditionalData"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PCHealth\ErrorReporting]
+"ShowUI"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"DontShowUI"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting]
+"LoggingDisabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-WER-Diag/Operational]
+"Enabled"=dword:00000000
+"@
+    Set-Content -Path "$env:TEMP\NoErrorReportIng.reg" -Value $MultilineComment -Force
+    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\NoErrorReportIng.reg`"" -NoNewWindow -Wait
+        Write-Host "Fewer Desktop icons Applied. Will be effective at Next reboot" -ForegroundColor Green
+}
+
+Function ErrorLogReportIng {
+$MultilineComment = @"
+	Windows Registry Editor Version 5.00
+
+;Windows Error Logging
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-TaskScheduler/Operational]
+"Enabled"=dword:00000001
+
+;Disable Uncecessary Debugger Events
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-MemoryDiagnostics-Results/Debug]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-OneBackup/Debug]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Application-Experience/Steps-Recorder]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Defender/Operational]
+"Enabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-WER-Diag/Operational]
+"Enabled"=dword:00000000
+
+;Enable Nececessary Secrurity Events
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-LUA-ConsentUI/Operational]
+"Enabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-WFP/Operational]
+"Enabled"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Defender/Operational]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Defender/WHC]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurity]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Firewall With Advanced Security/ConnectionSecurityVerbose]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Firewall With Advanced Security/Firewall]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Firewall With Advanced Security/FirewallDiagnostics]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Windows Firewall With Advanced Security/FirewallVerbose]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-WindowsBackup/ActionCenter]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-WindowsUpdateClient/Operational]
+"Enabled"=dword:00000001
+
+"@
+    Set-Content -Path "$env:TEMP\ErrorLogReportIng.reg" -Value $MultilineComment -Force
+    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\ErrorLogReportIng.reg`"" -NoNewWindow -Wait
+        Write-Host "ErrorLog ReportIng Applied. Will be effective at Next reboot" -ForegroundColor Green
+}
+
+#tasks
+Function SetTasks {
+
+schtasks /Change /TN "CreateExplorerShellUnelevatedTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\.NET Framework\.NET Framework NGEN v4.0.30319" /Enable
+schtasks /Change /TN "Microsoft\Windows\.NET Framework\.NET Framework NGEN v4.0.30319 64" /Enable
+schtasks /Change /TN "Microsoft\Windows\.NET Framework\.NET Framework NGEN v4.0.30319 Critical" /Disable
+schtasks /Change /TN "Microsoft\Windows\ApplicationData\DsSvcCleanup" /Enable
+schtasks /Change /TN "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" /Disable
+schtasks /Change /TN "Microsoft\Windows\Application Experience\ProgramDataUpdater" /Enable
+schtasks /Change /TN "Microsoft\Windows\Application Experience\StartupAppTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\AppxDeploymentClient\Pre-staged app cleanup" /Enable
+schtasks /Change /TN "Microsoft\Windows\Autochk\Proxy" /Disable
+schtasks /Change /TN "Microsoft\Windows\BrokerInfrastructure\BgTaskRegistrationMaintenanceTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\CloudExperienceHost\CreateObjectTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" /Disable
+schtasks /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\KernelCeipTask" /Disable
+schtasks /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" /Disable
+schtasks /Change /TN "Microsoft\Windows\Device Information\Device" /Enable
+schtasks /Change /TN "Microsoft\Windows\Defrag\ScheduledDefrag" /Enable
+schtasks /Change /TN "Microsoft\Windows\Diagnosis\Scheduled" /Enable
+schtasks /Change /TN "Microsoft\Windows\DiskCleanup\SilentCleanup" /Enable
+schtasks /Change /TN "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" /Enable
+schtasks /Change /TN "Microsoft\Windows\DiskFootprint\Diagnostics" /Enable
+schtasks /Change /TN "Microsoft\Windows\DiskFootprint\StorageSense" /Enable
+schtasks /Change /TN "Microsoft\Windows\DUSM\dusmtask" /Enable
+schtasks /Change /TN "Microsoft\Windows\EnterpriseMgmt\MDMMaintenenceTask" /Disable
+schtasks /Change /TN "Microsoft\Windows\Feedback\Siuf\DmClient" /Disable
+schtasks /Change /TN "Microsoft\Windows\Feedback\Siuf\DmClientOnScenarioDownload" /Disable
+schtasks /Change /TN "Microsoft\Windows\FileHistory\File History (maintenance mode)" /Disable
+schtasks /Change /TN "Microsoft\Windows\HelloFace\FODCleanupTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\LanguageComponentsInstaller\Installation" /Enable
+schtasks /Change /TN "Microsoft\Windows\LanguageComponentsInstaller\ReconcileLanguageResources" /Enable
+schtasks /Change /TN "Microsoft\Windows\LanguageComponentsInstaller\Uninstallation" /Enable
+schtasks /Change /TN "Microsoft\Windows\Location\WindowsActionDialog" /Disable
+schtasks /Change /TN "Microsoft\Windows\Management\Provisioning\Cellular" /Disable
+schtasks /Change /TN "Microsoft\Windows\Management\Provisioning\Logon" /Enable
+schtasks /Change /TN "Microsoft\Windows\Maintenance\WinSAT" /Enable
+schtasks /Change /TN "Microsoft\Windows\Maps\MapsToastTask" /Disable
+schtasks /Change /TN "Microsoft\Windows\Maps\MapsUpdateTask" /Disable
+schtasks /Change /TN "Microsoft\Windows\Multimedia\SystemSoundsService" /Enable
+schtasks /Change /TN "Microsoft\Windows\NlaSvc\WiFiTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\PI\Sqm-Tasks" /Enable
+schtasks /Change /TN "Microsoft\Windows\Power Efficiency Diagnostics\AnalyzeSystem" /Enable
+schtasks /Change /TN "Microsoft\Windows\Printing\EduPrintProv" /Disable
+schtasks /Change /TN "Microsoft\Windows\PushToInstall\Registration" /Enable
+schtasks /Change /TN "Microsoft\Windows\Ras\MobilityManager" /Enable
+schtasks /Change /TN "Microsoft\Windows\RecoveryEnvironment\VerifyWinRE" /Enable
+schtasks /Change /TN "Microsoft\Windows\RemoteAssistance\RemoteAssistanceTask" /Disable
+schtasks /Change /TN "Microsoft\Windows\Servicing\StartComponentCleanup" /Enable
+schtasks /Change /TN "Microsoft\Windows\Setup\SetupCleanupTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\SpacePort\SpaceAgentTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\SpacePort\SpaceManagerTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\Storage Tiers Management\Storage Tiers Management Initialization" /Enable
+schtasks /Change /TN "Microsoft\Windows\Sysmain\ResPriStaticDbSync" /Enable
+schtasks /Change /TN "Microsoft\Windows\Sysmain\WsSwapAssessmentTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\Time Synchronization\ForceSynchronizeTime" /Enable
+schtasks /Change /TN "Microsoft\Windows\Time Synchronization\SynchronizeTime" /Enable
+schtasks /Change /TN "Microsoft\Windows\Time Zone\SynchronizeTimeZone" /Enable
+schtasks /Change /TN "Microsoft\Windows\UPnP\UPnPHostConfig" /Enable
+schtasks /Change /TN "Microsoft\Windows\USB\Usb-Notifications" /Enable
+schtasks /Change /TN "Microsoft\Windows\WCM\WiFiTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\Windows Filtering Platform\BfeOnServiceStartTypeChange" /Enable
+schtasks /Change /TN "Microsoft\Windows\Windows Media Sharing\UpdateLibrary" /Disable
+schtasks /Change /TN "Microsoft\Windows\Workplace Join\Automatic-Device-Join" /Disable
+schtasks /Change /TN "Microsoft\Windows\WwanSvc\NotificationTask" /Enable
+schtasks /Change /TN "Microsoft\Windows\Windows Error Reporting\QueueReporting" /Disable
+schtasks /Change /TN "Microsoft\XblGameSave\XblGameSaveTask" /Disable
+
+$MultilineComment = @"
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\PriorityControl]
+"Win32PrioritySeparation"=dword:00000038 
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug]
+"Auto"=0
+ 
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Memory Management]
+"LargeSystemCache"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Memory Management]
+"DisablePagingExecutive"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Memory Management]
+"IoPageLockLimit"=dword:1073741824
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\PriorityControl]
+"IRQ8Priority"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters]
+"EnablePrefetcher"=dword:00000002
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters]
+"EnableSuperfetch"=dword:00000002
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters]
+"SfTracingState"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Siuf\Rules]
+"NumberOfSIUFInPeriod"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Siuf\Rules]
+"PeriodInNanoSeconds"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo]
+"DisabledByGroupPolicy"=dword:00000001
+
+[HKEY_CURRENT_USER\Control Panel\International\User Profile]
+"HttpAcceptLanguageOptOut"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"Start_TrackProgs"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SubscribedContent-338393Enabled"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SubscribedContent-353694Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsStore\WindowsUpdate]
+"AutoDownload"=dword:00000004
+ 
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"ContentDeliveryAllowed"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"OemPreInstalledAppsEnabled"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"PreInstalledAppsEnabled"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"PreInstalledAppsEverEnabled"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SilentInstalledAppsEnabled"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SoftLandingEnabled"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SubscribedContentEnabled"=dword:00000001
+"@
+    Set-Content -Path "$env:TEMP\SetTasks.reg" -Value $MultilineComment -Force
+    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\SetTasks`"" -NoNewWindow -Wait
         Write-Host "Fewer Desktop icons Applied. Will be effective at Next reboot" -ForegroundColor Green
 }
 
@@ -519,44 +843,47 @@ function Set-CorporateSettings {
     $MultilineComment = @"
 	Windows Registry Editor Version 5.00
 
-[HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer]
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client]
+"Enabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client]
+"DisabledByDefault"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\DTLS 1.2\Client]
+"Enabled"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\DTLS 1.2\Client]
+DisabledByDefault"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer]
 "NoStartMenuMorePrograms"=dword:00000000
-
-[HKEY_CLASSES_ROOT\*\shell\TakeOwnership]
-@="Take Ownership"
-"HasLUAShield"=""
-"NoWorkingDirectory"=""
-"NeverDefault"=""
-
-[HKEY_CLASSES_ROOT\*\shell\TakeOwnership\command]
-@="powershell -windowstyle hidden -command \"Start-Process cmd -ArgumentList '/c takeown /f \\\"%1\\\" && icacls \\\"%1\\\" /grant *S-1-3-4:F /t /c /l & pause' -Verb runAs\""
-"IsolatedCommand"="powershell -windowstyle hidden -command \"Start-Process cmd -ArgumentList '/c takeown /f \\\"%1\\\" && icacls \\\"%1\\\" /grant *S-1-3-4:F /t /c /l & pause' -Verb runAs\""
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\System]
 "EnableCdp"=dword:00000001
 
-[HKCU\Software\Microsoft\Windows\CurrentVersion\CDP]
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CDP]
 "CdpSessionUserAuthzPolicy"=dword:00000001
 
-[HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\CDP]
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\CDP]
 "RomeSdkChannelUserAuthzPolicy"=dword:00000001
 
-[HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
 "DisableTelemetry"=dword:00000001
 
-[HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
 "DisableTelemetry"=dword:00000001
 
-[HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
 "DisableTelemetry"=dword:00000001
 
-[HKCU\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\Common\ClientTelemetry]
 "VerboseLogging"=dword:00000003
 
-[HKCU\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\15.0\Common\ClientTelemetry]
 "VerboseLogging"=dword:00000000
 
-[HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry]
 "VerboseLogging"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning]
@@ -596,6 +923,259 @@ function Set-CorporateSettings {
 "9B223F67-67A1-5B53-9126-4593FE81DF25"="NGC_PoP_Key_And_Task"
 "a935c211-645a-5f5a-4527-778da45bbba5"="Microsoft.Tpm.HealthAttestationCertificateTask"
 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-LAPS/Operational]
+"Enabled"=dword:00000001
+"MaxSize"=dword:03200000
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-LiveId/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-LUA-ConsentUI/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-ModernDeployment-Diagnostics-Provider/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-ModernDeployment-Diagnostics-Provider/Autopilot]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-ModernDeployment-Diagnostics-Provider/Diagnostics]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-ModernDeployment-Diagnostics-Provider/ManagementService]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-MPTF/MPTF-Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-MUI/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-MUI/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NcdAutoSetup/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NCSI/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NDIS/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NdisImPlatform/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NetworkProfile/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NetworkProvider/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NlaSvc/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Ntfs/Operational]
+"Enabled"=dword:00000001
+"MaxSize"=dword:02000000
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-NTLM/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-OOBE-Machine-DUI/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-ParentalControls/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Partition/Diagnostic]
+"Enabled"=dword:00000001
+"MaxSize"=dword:01000000
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Policy/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PowerShell-DesiredStateConfiguration-FileDownloadManager/Operational]
+"Enabled"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PowerShell/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PowerShell/Analytic]
+"Enabled"=dword:00000000
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PowerShell/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PrintService/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Program-Compatibility-Assistant/CompatAfterUpgrade]
+"Enabled"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Provisioning-Diagnostics-Provider/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Provisioning-Diagnostics-Provider/AutoPilot]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Provisioning-Diagnostics-Provider/ManagementService]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PushNotification-Platform/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PushNotification-Platform/Operational]
+"Enabled"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RestartManager/Operational]
+"Enabled"=dword:00000001
+"MaxSize"=dword:000f4240
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Rdp-Graphics-RdpAvenc/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Rdp-Graphics-RdpAvenc/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Rdp-Graphics-RdpLite/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Rdp-Graphics-RdpLite/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RemoteApp and Desktop Connections/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RemoteApp and Desktop Connections/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RemoteAssistance/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RemoteAssistance/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RemoteDesktopServices-SessionServices/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Resource-Exhaustion-Detector/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Resource-Exhaustion-Resolver/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RetailDemo/Admin]
+"Enabled"=dword:00000000
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-RetailDemo/Operational]
+"Enabled"=dword:00000000
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SearchUI/Operational]
+"Enabled"=dword:00000000
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-Audit-Configuration-Client/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-EnterpriseData-FileRevocationManager/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-Isolation-BrokeringFileSystem/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-LessPrivilegedAppContainer/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-Mitigations/KernelMode]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-Mitigations/UserMode]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-Netlogon/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-SPP-UX-GenuineCenter-Logging/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-SPP-UX-Notifications/ActionCenter]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Security-UserConsentVerifier/Audit]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Shell-Core/LogonTasksChannel]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-ShellCommon-StartLayoutPopulation/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SmartCard-Audit/Authentication]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SmartCard-DeviceEnum/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SmartCard-TPM-VCard-Module/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SmartCard-TPM-VCard-Module/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SmbClient/Audit]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SmbClient/Connectivity]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SMBClient/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SmbClient/Security]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SMBServer/Audit]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SMBServer/Connectivity]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SMBServer/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SMBServer/Security]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SMBWitnessClient/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-SMBWitnessClient/Informational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-TerminalServices-ClientUSBDevices/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-TerminalServices-LocalSessionManager/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-TerminalServices-LocalSessionManager/Analytic]
+"Enabled"=dword:00000000
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-TerminalServices-LocalSessionManager/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-TerminalServices-RemoteConnectionManager/Admin]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-User-Loader/Operational]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-WinINet-Config/ProxyConfigChanged]
+"Enabled"=dword:00000001
+"AutoBackupLogFiles"=dword:00000001
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Yann]
 "post-setup-script"="1.3.1"
 "Windows Languages Packs"="1.3.1"
@@ -620,12 +1200,15 @@ function Set-HomeSettings {
     Write-Host "UAC has been enabled successfully." -ForegroundColor Green
      Write-Host "Applying PowerUser Settings . . ."
 
-
-    $MultilineComment = @"
+$MultilineComment = @"
 	Windows Registry Editor Version 5.00
 
 [HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer]
 "NoStartMenuMorePrograms"=dword:00000000
+
+;Enable Microsoft Support Diagnostic Tool MSDT
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy]
+"DisableQueryRemoteServer"=dword:00000000
 
 [HKEY_CLASSES_ROOT\*\shell\TakeOwnership]
 @="Take Ownership"
@@ -638,7 +1221,7 @@ function Set-HomeSettings {
 "IsolatedCommand"="powershell -windowstyle hidden -command \"Start-Process cmd -ArgumentList '/c takeown /f \\\"%1\\\" && icacls \\\"%1\\\" /grant *S-1-3-4:F /t /c /l & pause' -Verb runAs\""
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\System]
-"EnableCdp"=dword:00000001
+"EnableCdp"=dword:00000000
 
 [HKCU\Software\Microsoft\Windows\CurrentVersion\CDP]
 "CdpSessionUserAuthzPolicy"=dword:00000001
@@ -830,20 +1413,16 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
 "ExcludeWUDriversInQualityUpdate"=dword:00000000
 
-;Avoid the driver signing enforcement for EV cert - SHA256 Microsoft Windows signed drivers which is further enforced via Secure Boot
+;0 -Avoid the driver signing enforcement for EV cert - 1 -SHA256 Microsoft Windows signed drivers which is further enforced via Secure Boot
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\CI\Policy]
-"UpgradedSystem"=dword:00000001
+"UpgradedSystem"=dword:00000000
 
 ;Windows Error Reporting
-
-;Disable Microsoft Support Diagnostic Tool MSDT
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy]
-"DisableQueryRemoteServer"=dword:00000000
 
 ;Disable System Debugger Dr. Watson
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug]
 "UserDebuggerHotKey"=dword:00000000
-"Auto"="1"
+"Auto"="0"
 
 ;1 - Disable Windows Error Reporting WER
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PCHealth\ErrorReporting]
@@ -916,8 +1495,23 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Session Manager\Memory Management\PrefetchParameters]
 "SfTracingState"=dword:00000001
 
+;Disables Files History 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\FileHistory]
 "Disabled"=dword:00000001
+
+;Change advanced power settings 
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power\EnergyEstimation\TaggedEnergy]
+"DisableTaggedEnergyLogging"=dword:00000001
+"TelemetryMaxApplication"=dword:00000000
+"TelemetryMaxTagPerApplication"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Power]
+"EventProcessorEnabled"=dword:00000000
+"HibernateEnabled"=dword:00000001
+"PowerThrottlingOff"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power]
+"HiberbootEnabled"=dword:00000000
 
 ;Change plan settings - Change advanced power settings - Hard disk - Turn off hard disk plugged in after
 ;0 - Never - 4294967295 - max value in seconds
@@ -950,14 +1544,71 @@ Windows Registry Editor Version 5.00
 "NoDriveTypeAutoRun"=dword:255
 
 ;Gaming 
-;Disabling Game DVR 
+; Disable Xbox Game DVR and enable fullscreen optimization (Windows 11 22h2 and above only, set FSEBehavior to 2 to disable it otherwise)
+[HKEY_CURRENT_USER\System\GameConfigStore]
+"GameDVR_DXGIHonorFSEWindowsCompatible"=dword:00000000
+"GameDVR_EFSEFeatureFlags"=dword:00000000
+"GameDVR_Enabled"=dword:00000000
+"GameDVR_FSEBehavior"=dword:00000000
+"GameDVR_FSEBehaviorMode"=dword:00000000
+"GameDVR_HonorUserFSEBehaviorMode"=dword:00000000
+
+;Disable GameBar
+[HKEY_CURRENT_USER\Software\Microsoft\GameBar]
+"AutoGameModeEnabled"=dword:00000000
+"ShowStartupPanel"=dword:00000000
+"UseNexusForGameBarEnabled"=dword:00000000
+"AllowAutoGameMode"=dword:00000000
 
 ;0 - Disable Game DVR - "Press Win + G to record a clip"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\GameDVR]
+"AppCaptureEnabled"=dword:00000000
+"AudioCaptureEnabled"=dword:00000000
+"CursorCaptureEnabled"=dword:00000000
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\GameDVR]
 "AllowgameDVR"=dword:00000000
 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current\ApplicationManagement\AllowGameDVR]
+"value"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\ApplicationManagement\AllowGameDVR]
+"value"=dword:00000000
+
+;Disable Xbox Services
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XblAuthManager]
+"Start"=dword:00000004
+
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XblGameSave]
+"Start"=dword:00000004
+
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XboxGipSvc]
+"Start"=dword:00000004
+
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XboxNetApiSvc]
+"Start"=dword:00000004
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\BcastDVRUserService]
+"Start"=dword:00000004
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\xbgm]
+"Start"=dword:00000004
+
 [HKLM\System\ControlSet001\Services\BcastDVRUserService]
+"Start"=dword:00000004
+
+[HKLM\System\ControlSet001\Services\XblAuthManager]
+"Start"=dword:00000004
+
+[HKLM\System\ControlSet001\Services\XblGameSave]
+"Start"=dword:00000004
+
+[HKLM\System\ControlSet001\Services\XboxGipSvc]
+"Start"=dword:00000004
+
+[HKLM\System\ControlSet001\Services\XboxNetApiSvc]
 "Start"=dword:00000003
+
 [HKLM\System\ControlSet001\Services\xbgm]
 "Start"=dword:00000003
 
@@ -1146,7 +1797,7 @@ Windows Registry Editor Version 5.00
 
 ;Other devices 
 
-;Let apps automatically share and sync info with wireless devices that don't explicitly pair with your PC tablet or phone - 0 - Default - 1 - Enabled - 2 - Disabled
+;Let apps automatically share and sync info with wireless devices that do not explicitly pair with your PC tablet or phone - 0 - Default - 1 - Enabled - 2 - Disabled
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy]
 LetAppsSyncWithDevices=dword:00000002
 
@@ -1194,7 +1845,7 @@ LetAppsSyncWithDevices=dword:00000002
 [HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings]
 "Enabled"=dword:00000001
 
-;Digest Security Provider is disabled by default but malware can enable it to recover the plain text passwords from the system’s memory
+;Digest Security Provider is disabled by default but malware can enable it to recover the plain text passwords from the systems memory
 [HKLM\System\ControlSet001\Control\SecurityProviders\WDigest]
 "UseLogonCredential"=dword:00000001
 
@@ -1244,6 +1895,9 @@ LetAppsSyncWithDevices=dword:00000002
 ;1 - Automatically Restart on System Failure
 [HKEY_LOCAL_MACHINE\System\ControlSet001\Control\CrashControl]
 "AutoReboot"=dword:00000001
+;Windows Session 5 - 5 secs - Delay Chkdsk startup time at OS Boot
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Session Manager]
+"AutoChkTimeout"=dword:00000005
 
 ;Disables Activity History
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\System]
@@ -1252,7 +1906,14 @@ LetAppsSyncWithDevices=dword:00000002
 "UploadUserActivities"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\lfsvc\Service\Configuration]
-"Status"=dword:00000000
+"Status"=dword:00000001
+
+;Optimizes Network
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters]
+"Tcp1323Opts"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters]
+"DisabledComponents"=dword:00000020
 
 ;Disables Windows Ink Workspace
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\WindowsInkWorkspace]
@@ -1527,6 +2188,43 @@ HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Se
 "ConfigureStartPins"="{ \"pinnedList\": [] }"
 "ConfigureStartPins_LastWrite"=dword:00000001
 
+; --Memory Optimization
+; --DPC Tweaks
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\kernel]
+"DpcWatchdogProfileOffset"=dword:00000000
+"DpcTimeout"=dword:00000000
+"IdealDpcRate"=dword:00000001
+"MaximumDpcQueueDepth"=dword:00000001
+"MinimumDpcRate"=dword:00000001
+"DpcWatchdogPeriod"=dword:00000000
+"UnlimitDpcQueue"=dword:00000001
+
+; --DPC Tweaks
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl]
+"ForegroundBoost"=dword:00000001
+"ThreadBoostType"=dword:00000002
+"ThreadSchedulingModel"=dword:00000001
+"AdjustDpcThreshold"=dword:00000320
+"DeepIoCoalescingEnabled"=dword:00000001
+"IdealDpcRate"=dword:00000320
+"SchedulerAssistThreadFlagOverride"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management]
+"LargeSystemCache"=dword:00000001
+"DisablePagingExecutive"=dword:00000001
+;Disable Spectre, Meltdown, and Downfall mitigations
+;"FeatureSettingsOverride"=dword:2000003
+;"FeatureSettingsOverrideMask"=dword:00000003
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl]
+"IRQ0Priority"=dword:00000001
+"IRQ8Priority"=dword:00000001
+"Win32PrioritySeparation"=dword:00000016
+
+;Disable HyperV core isolation memory integrity to fix stuttering and responsiveness
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity]
+"Enabled"=dword:00000000
+
 ; --File System Settings--
 ; Enable Long File Paths with Up to 32,767 Characters
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\FileSystem]
@@ -1535,27 +2233,87 @@ HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Se
 ; --Multimedia and Gaming Performance--
 ; Gives Multimedia Applications like Games and Video Editing a Higher Priority
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile]
-"SystemResponsiveness"=dword:00000000
+"AlwaysOn"=dword:00000001
 "NetworkThrottlingIndex"=dword:0000000a
+"SystemResponsiveness"=dword:0000000a
+"NoLazyMode"=dword:00000001
+
+[Computer\HKEY_CURRENT_USER\Software\Microsoft\MediaPlayer\Preferences]
+"UsageTracking"=dword:00000000
 
 ; Gives Graphics Cards a Higher Priority for Gaming
 ; Gives the CPU a Higher Priority for Gaming
 ; Gives Games a higher priority in the system's scheduling
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games]
+"Affinity"=dword:00000000
+"Background Only"="False"
+"Clock Rate"=dword:00002710
 "GPU Priority"=dword:00000008
 "Priority"=dword:00000006
 "Scheduling Category"="High"
+"SFIO Priority"="High"
+"Latency Sensitive"="True"
 
-; disable startup sound
+; CSRSS.exe high priority
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe]
+"MinimumStackCommitInBytes"=qword:00008000
+"MitigationOptions"=qword:00200000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions]
+"CpuPriorityClass"=qword:00000003
+"IoPriority"=qword:00000003
+
+; ntoskrnl high priority
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\ntoskrnl.exe]
+"MinimumStackCommitInBytes"=qword:00008000
+"MitigationOptions"=qword:00200000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\ntoskrnl.exe\PerfOptions]
+"CpuPriorityClass"=qword:00000003
+"IoPriority"=qword:00000003
+
+; IO Priority carries over to MsMpEng
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\MsMpEng.exe]
+"MinimumStackCommitInBytes"=qword:00008000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\MsMpEng.exe\PerfOptions]
+"IoPriority"=qword:00000003
+
+; Timer Resolution Win11 Fix
+; After applying, use ProcessLasso's Options -> Tools -> System Timer Resolution option to apply your own global timer.
+; Use 0.508 as your global timer value
+; Enable checkboxes on "Set at every boot" and "Apply globally"
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\kernel]
+"GlobalTimerResolutionRequests"=dword:00000001
+;Moouse and Keyboard Optimization
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Input\Settings\ControllerProcessor\CursorSpeed]
+"CursorUpdateInterval"=dword:00000001
+
+;Mouse latency boost
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Power\Profile\Events\{54533251-82be-4824-96c1-47b60b740d00}\{0DA965DC-8FCF-4c0b-8EFE-8DD5E7BC959A}\{7E01ADEF-81E6-4e1b-8075-56F373584694}]
+"TimeLimitInSeconds"=dword:00000002
+
+;Disable Windows writing current time every 5 seconds to registry
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Reliability]
+"TimeStampInterval"=dword:00000000
+
+;Set mouse data queue size to minimum (default 100 or 0x64)
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouclass\Parameters]
+"MouseDataQueueSize"=dword:00000014
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters]
+"KeyboardDataQueueSize"=dword:00000014
+
+; enable startup sound
 [HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\BootAnimation]
-"DisableStartupSound"=dword:00000001
+"DisableStartupSound"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\EditionOverrides]
-"UserSetting_DisableStartupSound"=dword:00000001
+"UserSetting_DisableStartupSound"=dword:00000000
 
-; disable device installation settings
+; allow device installation settings from WU
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Device Metadata]
-"PreventDeviceMetadataFromNetwork"=dword:00000001
+"PreventDeviceMetadataFromNetwork"=dword:00000000
 
 ; NETWORK AND INTERNET
 ; disable allow other network users to control or disable the shared internet connection
@@ -1633,6 +2391,43 @@ HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Se
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\NewsAndInterests\AllowNewsAndInterests]
 "value"=dword:00000001
 
+;GPU Optimization
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers]
+"TdrLevel"=dword:00000000
+"TdrDebugMode"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\DisplayPostProcessing]
+"Affinity"=dword:00000000
+"Background Only"="True"
+"BackgroundPriority"=dword:00000018
+"Clock Rate"=dword:00002710
+"GPU Priority"=dword:00000012
+"Priority"=dword:00000008
+"Scheduling Category"="High"
+"SFIO Priority"="High"
+"Latency Sensitive"="True"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games]
+"Affinity"=dword:00000000
+"Background Only"="False"
+"Clock Rate"=dword:00002710
+"GPU Priority"=dword:00000008
+"Priority"=dword:00000006
+"Scheduling Category"="High"
+"SFIO Priority"="High"
+"Latency Sensitive"="True"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\DisplayPostProcessing]
+"Affinity"=dword:00000000
+"Background Only"="True"
+"BackgroundPriority"=dword:00000018
+"Clock Rate"=dword:00002710
+"GPU Priority"=dword:00000012
+"Priority"=dword:00000008
+"Scheduling Category"="High"
+"SFIO Priority"="High"
+"Latency Sensitive"="True"
+
 ; NVIDIA
 ; enable old nvidia sharpening
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\nvlddmkm\FTS]
@@ -1645,7 +2440,7 @@ HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\CurrentVersion\Internet Se
 EnableScripts=1
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\PowerShell]
-ExecutionPolicy=Unrestricted'
+ExecutionPolicy=Unrestricted
 
 [HKEY_USERS\.DEFAULT\Control Panel\Mouse]
 "MouseSpeed"="7"
@@ -1762,7 +2557,7 @@ Windows Registry Editor Version 5.00
 
 ; --Revert Multimedia and Gaming Performance--
 
-; Reverts Multimedia Applications' System Responsiveness and Network Throttling Index to Default Values
+; Reverts Multimedia Applications System Responsiveness and Network Throttling Index to Default Values
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile]
 "SystemResponsiveness"=dword:00000014
 "NetworkThrottlingIndex"=dword:ffffffff
@@ -1861,7 +2656,7 @@ Windows Registry Editor Version 5.00
 ; Enable update Microsoft Store apps automatically
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\WindowsStore]
 
-; --CAN'T DO NATIVELY--
+; --CANT DO NATIVELY--
 ; UWP APPS
 ; background apps
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy]
@@ -1999,7 +2794,7 @@ Windows Registry Editor Version 5.00
 
 ; frequent folders in quick access
 ; show files from office.com
-; don't show all taskbar icons
+; do not show all taskbar icons
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer]
 "ShowFrequent"=-
 "ShowCloudFilesInQuickAccess"=-
@@ -2050,6 +2845,7 @@ Windows Registry Editor Version 5.00
 "Win8DpiScaling"=dword:00000000
 "EnablePerProcessSystemDPI"=-
 "MenuShowDelay"="400"
+
 
 ; --IMMERSIVE CONTROL PANEL--
 ; PRIVACY
@@ -2644,7 +3440,7 @@ function Set-RecommendedHKCURegistry {
     $darkModeWallpaperPath = "C:\Windows\Web\4K\Wallpaper\Windows\img19_1920x1200.jpg"
 
     function Set-Wallpaper ($wallpaperPath) {
-        reg.exe add "HKEY_CURRENT_USER\Control Panel\Desktop" /v Wallpaper="$wallpaperPath" /f | Out-Null
+        reg.exe add "HKEY_CURRENT_USER\Control Panel\Desktop" /v Wallpaper=$wallpaperPath /f | Out-Null
         # Notify the system of the change
         rundll32.exe user32.dll, UpdatePerUserSystemParameters
     }
@@ -2830,6 +3626,10 @@ AutoRepeatRate=6
 ; disable fix scaling for apps
 ; disable menu show delay
 [HKEY_CURRENT_USER\Control Panel\Desktop]
+"AutoColorization"=dword:00000001
+"ImageColor"=dword:af3682b3
+"AutoEndTasks"=dword:00000001
+"ActiveWndTrackTimeout"=dword:00000000
 "FontSmoothing"="2"
 "LogPixels"=dword:00000060
 "Win8DpiScaling"=dword:00000001
@@ -2847,6 +3647,7 @@ AutoRepeatRate=6
 "DragFullWindows"="1"
 "DragHeight"="4"
 "DragWidth"="4"
+"DstNotification"=dword:00000000
 "FocusBorderHeight"=dword:00000001
 "FocusBorderWidth"=dword:00000001
 "FontSmoothing"="2"
@@ -2855,12 +3656,18 @@ AutoRepeatRate=6
 "FontSmoothingType"=dword:00000002
 "ForegroundFlashCount"=dword:00000007
 "ForegroundLockTimeout"=dword:00030d40
+"JPEGImportQuality"=dword:00000064
 "LeftOverlapChars"="3"
 "MenuShowDelay"="200"
 "MouseWheelRouting"=dword:00000002
 "PaintDesktopVersion"=dword:00000000
+"Pattern"=dword:00000000
+"Pattern Upgrade"="TRUE"
 "RightOverlapChars"="3"
 "ScreenSaveActive"=dword:00000001
+"ScreenSaverIsSecure"="1"
+"ScreenSaveTimeOut"="180"
+"SCRNSAVE.EXE"="C:\\WINDOWS\\system32\\PhotoScreensaver.scr"
 "SnapSizing"="1"
 "TileWallpaper"="0"
 "WallpaperOriginX"=dword:00000000
@@ -2871,9 +3678,10 @@ AutoRepeatRate=6
 "WindowArrangementActive"="1"
 "Win8DpiScaling"=dword:00000001
 "DpiScalingVer"=dword:00001000
-"MaxVirtualDesktopDimension"=dword:00000780
+"MaxVirtualDesktopDimension"=dword:00000cd0
 "MaxMonitorDimension"=dword:00000780
 "TranscodedImageCount"=dword:00000001
+"UserPreferencesMask"=hex:9e,1e,07,80,12,00,00,00
 "LastUpdated"=dword:ffffffff
 "Pattern Upgrade"="TRUE"
 "LockScreenAutoLockActive"="1"
@@ -2889,6 +3697,7 @@ AutoRepeatRate=6
 "DelayLockInterval"=dword:00000000
 "AutoColorization"=dword:00000001
 "ImageColor"=dword:afd4e846
+
 
 [HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics]
 "MinAnimate"="0"
@@ -3283,6 +4092,30 @@ AutoRepeatRate=6
 "ShowFrequent"=dword:00000000
 "ShowCloudFilesInQuickAccess"=dword:00000000
 "EnableAutoTray"=dword:00000000
+
+;Spotlight Wallpaper
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers]
+"WallpaperRestored"=dword:00000000
+"RestoreSpotlight"=dword:00000001
+"BackedUpWallpaperPath"="c:\\windows\\systemapps\\microsoftwindows.client.cbs_cw5n1h2txyewy\\desktopspotlight\\assets\\images\\image_2.jpg"
+"BackgroundType"=dword:00000003
+"SlideshowSourceDirectoriesSet"=dword:00000001
+"SlideshowDirectoryPath1"="pHAFA8BUg/E0gouOpBhoYjAArADMdmBAvMkOcBAAAAAAAAAAAAAAAAAAAAAAAAAeAEDAAAAAAIHXAFaEAU1clJ3cAQGAJAABA8uvBiVq6IHXAFqLAAAAz9DAAAAAOAAAAAAAAAAAAoDAAAAAAQllFBQVAMHAlBgcAMHAAAAQAMHAoBQZAwGAsBwMAIDAuAAZAwGAsBALA0CAyAQMAgDAxAwMAAAAUAAUAEDAAAAAAMHX2xDEAkXYu5WMAwDAJAABA8uvQu1MYNHX2xjLAAAAQgcBAAAALAAAAAAAAAAAAAAAAAAAAsHVYAQeAEGAuBgbAEDAAAAFAoFAxAAAAAAA0x19WFDBP5WZEJXa2VGAAIEAJAABA8uvQuFuZRHX3blLAAAAZSsDAAAADAAAAAAAaAHAQCAAAAAAA4lz0DwTA4GAlBARAIHApBgdAUGAAAAGAgJAxAAAAAAAzxV7gFBBJ1WYnV2cAAgdAkAAEAw7+C5WPnVccBbNuAAAAY7vOAAAAUAAAAAAAoBYAAJPAAAAAAQPt6JAJBQbAEGAnBQZAMHAAAAQAcHApBgbAQGAvBwdAMHAuAwcAQHAvBgcAEGAnBQZA4CAkBAbAwGAsAQLAIDAxAwNAcDA5AAAAYBAMAAAAkCAv7LCAYBAAAA"
+"CurrentWallpaperPath"="c:\\windows\\systemapps\\microsoftwindows.client.cbs_cw5n1h2txyewy\\desktopspotlight\\assets\\images\\image_2.jpg"
+"BackgroundHistoryPath0"="c:\\windows\\web\\wallpaper\\themeb\\img24.jpg"
+"BackgroundHistoryPath1"="c:\\windows\\systemapps\\microsoftwindows.client.cbs_cw5n1h2txyewy\\desktopspotlight\\assets\\images\\image_1.jpg"
+"BackgroundHistoryPath2"="c:\\windows\\web\\wallpaper\\windows\\img19.jpg"
+"BackgroundHistoryPath3"="c:\\windows\\web\\wallpaper\\windows\\img0.jpg"
+"BackgroundHistoryPath4"="c:\\windows\\systemapps\\microsoftwindows.client.cbs_cw5n1h2txyewy\\desktopspotlight\\assets\\images\\image_3.jpg"
+"SlideshowDirectoryPath2"="rJAFA8BUg/E0gouOpBhoYjAArADMdmBAvMkOcBAAAAAAAAAAAAAAAAAAAAAAAAAeAEDAAAAAAAHXoVYEAU1clJ3cAQGAJAABA8uvBiVq6AHXpVoLAAAA82AAAAAABAAAAAAAAAAAAoDAAAAAAY4gGDQVAMHAlBgcAMHAAAAQAMHAoBQZAwGAsBwMAIDAuAAZAwGAsBALA0CAyAQMAgDAxAwMAAAAUAAbAEDAAAAAAEHXHTLEAwUQQNVQE5XMAAAVAkAAEAw7+CHXqYUccdMtuAAAAAZAAAAAAMAAAAAAAAAAAAAAAAAAAAwRroIAMBQQAAFATBQQAQGAtBQaA4GApBwcAQHAyBQYAQHAvBgcAAAAYAgWAEDAAAAAAEHX1TbME8kblRkcpZXZAAgQAkAAEAw7+CHX2ZUccVPtuAAAAU/CCAAAAMAAAAAAAoBcAAJAAAAAAAQ5eEJAPBgbAUGAEBgcAkGA2BQZAAAAYAAUAEDAAAAAAIHXoDDEEAlUPd0UAwDAJAABA8uvyxlTwIHXoDjLAAAAR3sAAAAADAAAAAAAaAGAQCAAAAAAAMBLsDAUAIFAPBwRAMFAAAAFAoFAxAAAAAAAyxVewABByV2ZpNHdyVGAAIEAJAABA8uvyx1TwIHX5BjLAAAAy3sAAAAACAAAAAAAaAGAQCAAAAAAA4najEgcAUGAnBQaAMHA0BgcAUGAAAAGAQFAxAAAAAAAyxVWyABBJ1WYnV2cAAgPAkAAEAw7+KHXPBjccllMuAAAAMfzCAAAAIAAAAAAAoBYAAJAAAAAAAw8NlKAJBQbAEGAnBQZAMHAAAgFAAAA"
+"SlideshowSourceDirectoriesSet"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers\Images]
+"ID-1"="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"
+"ID-2"="FrAFA8RSHpxAZJ3PnSUiFXVl+vGMuLIA0BAHAMkRTZkFAEDAAAAAAA5WzglEAEEcwRUY0FGAAAAdaklXW+90I14ZXMDvujiuF3s+f/5ZWFUiHV8xrBst/BEAJAABA8uvQu1MY1GXlFmLAAAAhgcBAAAAMAAAAAAAAAAAAAAAAAAAAEb7dDQQAAHAwBARAEGA0BQYAAAACBAUAEDAAAAAAEHXFoFEAw0bjFGbAwDAJAABA8uvQu1MYFHXFolLAAAAEhcBAAAALAAAAAAAAAAAAAAAAAAAA4mchCATA8GAjBQYAwGAAAAFAwFAxAAAAAAAzxVxgCBANl0QS90U+FDAAQEAJAABA8uvQu1MYNHXFDqLAAAAKhcBAAAAMAAAAAAAAAAAAAAAAAAAAIzhJDQTAkGAjBgcA8GAzBwbAYGA0BAAAgBAWBQMAAAAAAAccdUfQAwVp5GZvd3cAAEAJAABA8uvQu1MYBHXH1nLAAAAPhcBAAAALAAAAAAAAAAAAAAAAAAAAI1owBwVAkGAuBAZA8GA3BwcAAAAWAAVAEDAAAAAAQHX6hIEAQFal1WZzBAA+AQCAQAAv7Lkbh9Y0xleI6CAAAQmCAAAAAQRAAAAAAAAAAAAAAAAAAAArAoWAQFAoBQZA0GAlBwcAAAAWAAXAEDAAAAAAQHXDiIEAcXaudTdsRXatBARAkAAEAw7+SHXDiIdcNIiuAAAAIP4FAAAAABAAAAAAAAAAAAAAAAAAAA+VYDA3BQaA4GA3AQdAwGA0BQaA0GAAAAGAsHCxAAAAAAA0xFhICBAEV2crR3bwJUYjt2Zy9WduRGAUBQCAQAAv7LdcNIi0xFhI6CAAAA9gXAAAAAEAAAAAAAAAAAAAAAAAAAApyK/AQEAlBwcAsGA0BwbAAHACBQYAMGArBwZAIHAvBQdA4GAkBAAAACAHgAAAABAv7bAAAAA1fAAAE/BAAQMTB1UFUdzVzpLbAxkXiAArwS+uGCAAAAEAAAAAsEAlBQeAoDAQBQSAQEAAAwEAAAAkBAAAUuBAAAFAAAAAMEAvBgbAQGApBAdAkGAvBgbAAAACBAAA4BAAAAcAIHAvBAcAQDAyAQOAQDA5AgNAcDAyAQOAUDAAAAAAspBAAwEN+WEeARpPRI1/LYe4kRNAAAAAEAAAAwFAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAYAAAAgKA4CAqBAcAcGAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAHAAAAoCAuAgaAAHAlBwZAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAYAAAAgKA4CAiBQbAAHAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAGAAAAoCAuAAZAkGAiBAAAAAABAAAAAAAAkIXxL1FaFOS72sRjiPn8JMAAAAAgr1zBp19GgUvHm1xZTij5SGAAAwCAAAAfAgBAAAAqAgLAAHAuBwZAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAYAAAAgKA4CAnBQaAYGAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAHAAAAoCAuAgaAYGApBgZAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAYAAAAgKA4CAqBAcAUGAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAGAAAAoCAuAAdAkGAmBAAAAAABAAAAAAAAkIXxL1FaFOS72sRjiPn8JMAAAAAgr1zBp19GgUvHm1xZTij5SGAAAwCAAAAfAwBAAAAqAgLAQHApBgZAYGAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAGAAAAoCAuAwdAQGAwBAAAAAABAAAAAAAAkIXxL1FaFOS72sRjiPn8JMAAAAAgr1zBp19GgUvHm1xZTij5SGAAAwCAAAAfAwBAAAAqAgLAgGAlBQaAMGAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAHAAAAoCAuAAaAUGApBgZAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAgAAAAgKA4CAoBQZAkGAjBwcAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAgAAAAgKA4CAoBQZAkGAmBwcAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAYAAAAgKA4CAoBQaAYGAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAHAAAAoCAuAQYAYHAjBQaAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAcAAAAgKA4CAhBgdAMGAzBAAAAAABAAAAAAAAkIXxL1FaFOS72sRjiPn8JMAAAAAgr1zBp19GgUvHm1xZTij5SGAAAwCAAAAfAwBAAAAqAgLAEGA2BQaAYGAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAIAAAAoCAuAQYAYHApBgZAMHAAAAAAEAAAAAAAAQicFvUXoV4ItbzGNK+cynwAAAAAAuWPHkW3bAS9eYWHnNJOmLZAAAALAAAA8BAGAAAAoCAuAgaAgHAyBAAAAAABAAAAAAAAkIXxL1FaFOS72sRjiPn8JMAAAAAgr1zBp19GgUvHm1xZTij5SGAAAwCAAAAfAgBAAAAqAgLAoGA4BAbAAAAAAQAAAAAAAAAJyV8SdhWhj0uNb0o4zJfCDAAAAA4a9cQadvBI17hZdc2k4YukBAAAsAAAAwHAcAAAAgKA4CA3BQZAIGAwBAAAAAABAAAAAAAAAQdAAAAUAAAAAwSAUGA5BgOAYEANBAVAkEAEBAAAgAAAAgTAAAA7BANAEDADBgRAUDABBQRAADAtAgRAcDA1AQQA0CA0AAOAADA2AQLAIEAEBAOAcDAtAQNAkDADBwNAQEA5AgMAQDA4AQRAIEA5AQfAAAAAAwPAAAAKAAAAAgTAEGAtBQZAAAAIAAAAQCAAAARAUGAzBwaAQHAvBAcAIEAhBwYAsGAnBgcA8GA1BgbAQGAAAwGAAAAKAAAAAAVAkHAwBQZAAAATAAAAAAAAAAAAAAAAAAAAACAAAA"
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\TooltipAnimation]
+"DefaultApplied"=dword:00000001
 
 ; enable display full path in the title bar
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState]
@@ -4346,14 +5179,50 @@ else { Write-Host "Packages found at $AppsFolderPath ";
     }
 }
 
-function TeleMetry {	
+function TeleMetry {
+
+    $MultilineComment = @"
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection]
+"AllowTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
+"DoNotShowFeedbackNotifications"=dword:00000001
+"LimitDiagnosticLogCollection"=dword:00000001
+"DisableDeviceDelete"=dword:00000000
+"DisableDiagnosticDataViewer"=dword:00000000
+"LimitDumpCollection"=dword:00000001
+"LimitEnhancedDiagnosticDataWindowsAnalytics"=dword:00000001
+"DisableTelemetryOptInSettingsUx"=dword:00000000
+"EnableOneSettingsAuditing"=dword:00000000
+"DisableTelemetryOptInChangeNotification"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Application-Experience/Program-Telemetry]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
+"AllowTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
+"DoNotShowFeedbackNotifications"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Privacy]
+"TailoredExperiencesWithDiagnosticDataEnabled"=dword:00000000
+"@
+    Set-Content -Path "$env:TEMP\Optimize_TeleMetry.reg" -Value $MultilineComment -Force
+    Regedit.exe /S "$env:TEMP\Optimize_TeleMetry.reg"
+    
+    Write-Host "Recommended User Registry Settings Applied." -ForegroundColor Green
+
+	
      Write-Host "Applying Recommended Telemetry Settings . . ."
     # Registry modifications
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DoNotShowFeedbackNotifications /t REG_DWORD /d 1 /f 2>&1 | Out-Null
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDiagnosticLogCollection /t REG_DWORD /d 1 /f 2>&1 | Out-Null
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DoNotShowFeedbackNotifications /t REG_DWORD /d 1 /f 2>&1
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDiagnosticLogCollection /t REG_DWORD /d 1 /f 2>&1
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableDeviceDelete /t REG_DWORD /d 0 /f 2>&1
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableDiagnosticDataViewer /t REG_DWORD /d 0 /f 2>&1 
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDumpCollection /t REG_DWORD /d 1 /f 2>&1 | Out-Null
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDumpCollection /t REG_DWORD /d 1 /f 2>&1
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitEnhancedDiagnosticDataWindowsAnalytics /t REG_DWORD /d 1 /f 2>&1 
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableTelemetryOptInSettingsUx /t REG_DWORD /d 0 /f 2>&1 
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v EnableOneSettingsAuditing /t REG_DWORD /d 0 /f 2>&1 
@@ -4565,8 +5434,8 @@ Windows Registry Editor Version 5.00
 }
 function SetCopilotOut {
     # Disables Recall AI Services
-    subinacl /subkeyreg "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\" /grant=ADMINISTRATORS=f | Out-Null
-    subinacl /subkeyreg "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall"  /grant=ADMINISTRATORS=f | Out-Null
+    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\ /grant=ADMINISTRATORS=f | Out-Null
+    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall  /grant=ADMINISTRATORS=f | Out-Null
     # apps folder
     icacls $env:Systemroot\SystemApps /setowner ADMINISTRATORS /T /C /Q | Out-Null
     icacls $env:Systemroot\SystemApps /GRANT:r ADMINISTRATORS:F /T /C /Q | Out-Null
@@ -4727,12 +5596,16 @@ function OptimizeNvme {
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides /v 3244671118 /t REG_DWORD /d 1 /f 2>&1 | Out-Null
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides /v 1853569164 /t REG_DWORD /d 1 /f 2>&1 | Out-Null
     cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides /v 156965516 /t REG_DWORD /d 1 /f 2>&1 | Out-Null
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Storage-NvmeDisk/Operational /v OwningPublisher /d {9799276c-fb04-47e8-845e-36946045c218} /f 2>&1 | Out-Null
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Storage-NvmeDisk/Operational /v Enabled /t REG_DWORD /d 1  /f 2>&1 | Out-Null
     Write-Host "Recommended Nvme Settings Applied." -ForegroundColor Green
     return
 }
 
 # restores Permissions on system folders and regkeys
 function Set-Permsys {
+    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\ /grant=SYSTEM=f | Out-Null
+    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI  /grant=SYSTEM=f | Out-Null
     icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\* /GRANT:r SYSTEM:F /T /C /Q | Out-Null
     icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\* /setowner "NT SERVICE\TrustedInstaller" /T /C /Q | Out-Null
     # public folders
@@ -4743,7 +5616,7 @@ function Set-Permsys {
     icacls $env:Systemroot\Web\ /setowner "NT SERVICE\TrustedInstaller" /T /C /Q | Out-Null
     # apps folder
     icacls $env:Systemroot\SystemApps\ /GRANT:r SYSTEM:F /T /C /Q | Out-Null
-    icacls $env:Systemroot\SystemApps\ /setowner "NT SERVICE\TrustedInstaller" /T /C /Q | Out-Null
+    icacls $env:Systemroot\SystemApps\ /setowner NT SERVICE\TrustedInstaller /T /C /Q | Out-Null
     Write-Host "Permissions cleaned."   -ForegroundColor Green
 }
 
@@ -4798,6 +5671,12 @@ function Enable-WindowsDefender {
 "DisableBlockAtFirstSeen"=-
 "SpynetReporting"=dword:00000001
 "SubmitSamplesConsent"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\WMI\Autologger\DefenderApiLogger]
+"Start"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\WMI\Autologger\DefenderAuditLogger]
+"Start"=dword:00000001
 "@
     Set-Content -Path "$env:TEMP\Enable_Windows_Defender.reg" -Value $MultilineComment -Force
     $path = "$env:TEMP\Enable_Windows_Defender.reg"
@@ -4842,6 +5721,5 @@ CreateExpLus
 # OptimizeNvme
 Set-Permsys
 Enable-WindowsDefender
-
 Write-Host "Done; Please restart to apply changes"
 Stop-Transcript;
