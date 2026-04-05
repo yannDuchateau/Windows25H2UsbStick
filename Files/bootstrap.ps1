@@ -34,26 +34,39 @@ LOgCreate
 
 # Disable-WindowsDefender during Setup
 function Disable-WindowsDefender {
+    Stop-Service -Name Sense -Force
+    Stop-Service -Name WdBoot -Force
+    Stop-Service -Name WdFilter -Force
+    Stop-Service -Name WdNisDrv -Force
+    Stop-Service -Name WdNisSvc -Force
+    Stop-Service -Name WinDefend -Force
+    Set-Service -Name Sense -StartupType Disabled
+    Set-Service -Name WdBoot -StartupType Disabled
+    Set-Service -Name WdFilter -StartupType Disabled
+    Set-Service -Name WdNisDrv -StartupType Disabled
+    Set-Service -Name WdNisSvc -StartupType Disabled
+    Set-Service -Name WinDefend -StartupType Disabled
+
     $MultilineComment = @"
 	Windows Registry Editor Version 5.00
 
 ; Disable-WindowsDefender during Windows Installation
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\Sense]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Sense]
 "Start"=dword:00000003
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdBoot]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdBoot]
 "Start"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdFilter]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdFilter]
 "Start"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdNisDrv]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdNisDrv]
 "Start"=dword:00000003
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdNisSvc]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdNisSvc]
 "Start"=dword:00000003
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WinDefend]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WinDefend]
 "Start"=dword:00000002
 
 [HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows Defender Security Center]
@@ -63,8 +76,8 @@ function Disable-WindowsDefender {
 "enableEnhancedNotifications"=dword:00000001
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender]
-"DisableAntiSpyware"=-
-"DisableAntiVirus"=-
+"DisableAntiSpyware"=dword:00000001
+"DisableAntiVirus"=dword:00000001
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\Policy Manager]
 
@@ -91,21 +104,125 @@ function Disable-WindowsDefender {
     Write-Host "Windows Defender has been Disabled." -ForegroundColor Green
 }
 
+function TeleMetry {
+    Stop-Service -Name DiagTrack -Force
+    Set-Service -Name DiagTrack -StartupType Disabled
+    Stop-Service -Name whesvc -Force
+    Set-Service -Name whesvc -StartupType Disabled
+    Stop-Service -Name ClickToRunSvc -Force
+    Set-Service -Name ClickToRunSvc -StartupType Disabled
+
+    $MultilineComment = @"
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection]
+"AllowTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
+"DoNotShowFeedbackNotifications"=dword:00000001
+"LimitDiagnosticLogCollection"=dword:00000001
+"DisableDeviceDelete"=dword:00000000
+"DisableDiagnosticDataViewer"=dword:00000000
+"LimitDumpCollection"=dword:00000001
+"LimitEnhancedDiagnosticDataWindowsAnalytics"=dword:00000001
+"DisableTelemetryOptInSettingsUx"=dword:00000000
+"EnableOneSettingsAuditing"=dword:00000000
+"DisableTelemetryOptInChangeNotification"=dword:00000000
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Policies\DataCollection]
+"AllowTelemetry"=dword:00000000
+"MaxTelemetryAllowed"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Application-Experience/Program-Telemetry]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
+"AllowTelemetry"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
+"DoNotShowFeedbackNotifications"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Privacy]
+"TailoredExperiencesWithDiagnosticDataEnabled"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\Common]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\Common\ClientTelemetry]
+"DisableTelemetry"=dword:00000001
+"sendtelemetry"=dword:00000003
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\MicrosoftEdge\BooksLibrary]
+"EnableExtendedBooksTelemetry"=dword:00000000
+"@
+    Set-Content -Path "$env:TEMP\Optimize_TeleMetry.reg" -Value $MultilineComment -Force
+    Regedit.exe /S "$env:TEMP\Optimize_TeleMetry.reg"
+    
+    Write-Host "Recommended User Registry Settings Applied." -ForegroundColor Green
+
+	
+     Write-Host "Applying Recommended Telemetry Settings . . ."
+    # Registry modifications
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DoNotShowFeedbackNotifications /t REG_DWORD /d 1 /f 2>&1
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDiagnosticLogCollection /t REG_DWORD /d 1 /f 2>&1
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableDeviceDelete /t REG_DWORD /d 0 /f 2>&1
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableDiagnosticDataViewer /t REG_DWORD /d 0 /f 2>&1 
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDumpCollection /t REG_DWORD /d 1 /f 2>&1
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitEnhancedDiagnosticDataWindowsAnalytics /t REG_DWORD /d 1 /f 2>&1 
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableTelemetryOptInSettingsUx /t REG_DWORD /d 0 /f 2>&1 
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v EnableOneSettingsAuditing /t REG_DWORD /d 0 /f 2>&1 
+    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableTelemetryOptInChangeNotification /t REG_DWORD /d 0 /f 2>&1 
+    cmd.exe /c reg.exe add HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry /v DisableTelemetry /t REG_DWORD /d 1 /f 2>&1
+    cmd.exe /c reg.exe add HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry /v VerboseLogging /t REG_DWORD /d 0 /f 2>&1
+    cmd.exe /c reg delete HKLM\SOFTWARE\Microsoft\ClickToRun\OverRide /v PipelineLogging /f 2>&1
+    cmd.exe /c reg delete HKLM\SOFTWARE\Microsoft\ClickToRun\OverRide /v LogLevel /f 2>&1
+    Write-Host "Recommended Telemetry Settings Applied." -ForegroundColor Green
+}
+
 # Grant Admin access on apps folders during Setup.
 # Do not forget to give permissions back when done with function Set-Permsys.
+function Set-PermAdmDE {
+    # Wallpaper folders
+    takeown /f $env:Systemroot\SystemApps /a /r /D:J 2>&1 | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\Web\ /inheritance:r /grant:r Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
+    #AI folders
+    takeown /f $env:Systemroot\System32\Tasks\Microsoft\Windows\* /a /r /D:J 2>&1 | Out-Null
+    subinacl /subkeyreg "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\" /grant=/grant=ADMINISTRATORS=f | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\ /inheritance:r /grant:r BUILTIN\Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
+    # apps folder
+    takeown /f "$env:Systemroot\SystemApps" /a /r /D:J 2>&1 | Out-Null
+    cmd.exe /c "icacls %Systemroot%\SystemApps /inheritance:r /grant:r BUILTIN\Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\SystemApps /GRANT:r BUILTIN\Administrators:F /T /C /Q" | Out-Null
+
+    Write-Host "Permissions Granted."   -ForegroundColor Green
+}
+
 function Set-PermAdm {
     # Wallpaper folders
-    takeown /f '$env:Systemroot\SystemApps' /a /r /D:J
-    icacls $env:Systemroot\Web\ /inheritance:r /grant:r Administrators:(OI)(CI)F /t /l /q /c | Out-Null
+    takeown /f $env:Systemroot\SystemApps /a /r /D:y 2>&1 | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\Web\ /inheritance:r /grant:r Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
     #AI folders
-    takeown /f $env:Systemroot\SystemApps /a /r /D:J
-    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\* /grant=/grant=BUILTIN\ADMINISTRATORS=f | Out-Null
-    subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall  /grant=/grant=BUILTIN\ADMINISTRATORS=f | Out-Null
-    icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\WindowsAI /inheritance:r /grant:r /grant=BUILTIN\ADMINISTRATORS:(OI)(CI)F /t /l /q /c | Out-Null
+    takeown /f $env:Systemroot\System32\Tasks\Microsoft\Windows\* /a /r /D:y 2>&1 | Out-Null
+    subinacl /subkeyreg "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\" /grant=/grant=ADMINISTRATORS=f | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\ /inheritance:r /grant:r BUILTIN\Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
     # apps folder
-    takeown /f "$env:Systemroot\SystemApps" /a /r /D:J
-    icacls "$env:Systemroot\SystemApps" /inheritance:r /grant:r "Administrators:(OI)(CI)F" /t /l /q /c | Out-Null
-    icacls $env:Systemroot\SystemApps /GRANT:r ADMINISTRATORS:F /T /C /Q | Out-Null
+    takeown /f "$env:Systemroot\SystemApps" /a /r /D:y 2>&1 | Out-Null
+    cmd.exe /c "icacls %Systemroot%\SystemApps /inheritance:r /grant:r BUILTIN\Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\SystemApps /GRANT:r BUILTIN\Administrators:F /T /C /Q" | Out-Null
+
+    Write-Host "Permissions Granted."   -ForegroundColor Green
+}
+
+function Set-PermAdmFR {
+    # Dossier Wallpaper
+    takeown /f $env:Systemroot\SystemApps /a /r /D:o 2>&1 | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\Web\ /inheritance:r /grant:r Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
+    #Dossiers IA
+    takeown /f $env:Systemroot\System32\Tasks\Microsoft\Windows\* /a /r /D:o 2>&1 | Out-Null
+    subinacl /subkeyreg "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\" /grant=/grant=ADMINISTRATORS=f | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\ /inheritance:r /grant:r BUILTIN\Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
+    # Dossiers des Apps
+    takeown /f "$env:Systemroot\SystemApps" /a /r /D:o 2>&1 | Out-Null
+    cmd.exe /c "icacls %Systemroot%\SystemApps /inheritance:r /grant:r BUILTIN\Administrators:(OI)(CI)F /t /l /q /c" | Out-Null
+    cmd.exe /c "icacls $env:Systemroot\SystemApps /GRANT:r BUILTIN\Administrators:F /T /C /Q" | Out-Null
 
     Write-Host "Permissions Granted."   -ForegroundColor Green
 }
@@ -405,7 +522,7 @@ Function CreateAppshortcut {
 }
 
 # Create Windows Tools Shortcut
-Function CreateAppshortcut {
+Function CreateToolsShortcut {
     # Create desktop shortcut for Windows Tools
     $SystemDir = "C:\WINDOWS\"
     try {
@@ -451,6 +568,29 @@ Function CreateSearchLnk {
     }
 }
 
+Function SpotLightshortcut {
+    # Create desktop shortcut for all Installed Applicationss
+    $SystemDir = "C:\WINDOWS\"
+    try {
+        $targetFile = Join-Path $SystemDir "explorer.exe"
+        $shortcutPath = "C:\Users\Public\Desktop\Spotlight Set.lnk"
+        $WshShell = New-Object -ComObject WScript.Shell
+        $shortcut = $WshShell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = "%windir%\explorer.exe"
+        $shortcut.Arguments = "shell:::{ED834ED6-4B5A-4bfe-8F11-A626DCB6A921} -Microsoft.Personalization\pageWallpaper"
+        $shortcut.IconLocation = "C:\Windows\System32\dccw.exe,0"
+        $shortcut.WorkingDirectory = "C:\Windows\"
+        $shortcut.Description = "Spotligh Images setup"
+        $shortcut.Save()
+        $bytes = [System.IO.File]::ReadAllBytes($shortcutPath)
+        $bytes[21] = 34
+        [System.IO.File]::WriteAllBytes($shortcutPath, $bytes)
+        Write-host "Created desktop shortcut: $shortcutPath" "SUCCESS"
+    } catch {
+        Write-host "Failed to create desktop shortcut: $($_.Exception.Message)" "ERROR"
+    }
+}
+
 # Removes OneDrive Shortcut during Windows Installation
 function Remove-Shortcuts {
     Remove-Item "C:\Users\Default\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk" -ErrorAction SilentlyContinue
@@ -472,6 +612,20 @@ $MultilineComment = @"
 "{f874310e-b6b7-47dc-bc84-b9e6b38f5903}"=dword:00000000
 ; Gallery
 "{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}"=dword:00000000
+
+;Documents - Computer - Network - internet explorer
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu]
+"{208D2C60-3AEA-1069-A2D7-08002B30309D}"=dword:00000000
+"{20D04FE0-3AEA-1069-A2D8-08002B30309D}"=dword:00000000
+"{450D8FBA-AD25-11D0-98A8-0800361B1103}"=dword:00000000
+"{871C5380-42A0-1069-A2EA-08002B30309D}"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel]
+"{208D2C60-3AEA-1069-A2D7-08002B30309D}"=dword:00000000
+"{20D04FE0-3AEA-1069-A2D8-08002B30309D}"=dword:00000000
+"{450D8FBA-AD25-11D0-98A8-0800361B1103}"=dword:00000000
+"{871C5380-42A0-1069-A2EA-08002B30309D}"=dword:00000000
+
 "@
     Set-Content -Path "$env:TEMP\FewDskIcons.reg" -Value $MultilineComment -Force
     Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\FewDskIcons.reg`"" -NoNewWindow -Wait
@@ -642,7 +796,7 @@ schtasks /Change /TN "Microsoft\Windows\Application Experience\Microsoft Compati
 schtasks /Change /TN "Microsoft\Windows\Application Experience\ProgramDataUpdater" /Enable
 schtasks /Change /TN "Microsoft\Windows\Application Experience\StartupAppTask" /Enable
 schtasks /Change /TN "Microsoft\Windows\AppxDeploymentClient\Pre-staged app cleanup" /Enable
-schtasks /Change /TN "Microsoft\Windows\Autochk\Proxy" /Disable
+schtasks /Change /TN "Microsoft\Windows\Autochk\Proxy" /Enable
 schtasks /Change /TN "Microsoft\Windows\BrokerInfrastructure\BgTaskRegistrationMaintenanceTask" /Enable
 schtasks /Change /TN "Microsoft\Windows\CloudExperienceHost\CreateObjectTask" /Enable
 schtasks /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" /Disable
@@ -781,12 +935,13 @@ Windows Registry Editor Version 5.00
 "SubscribedContentEnabled"=dword:00000001
 "@
     Set-Content -Path "$env:TEMP\SetTasks.reg" -Value $MultilineComment -Force
-    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\SetTasks`"" -NoNewWindow -Wait
+    Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\SetTasks.reg`"" -NoNewWindow -Wait
         Write-Host "Fewer Desktop icons Applied. Will be effective at Next reboot" -ForegroundColor Green
 }
 
 #Spotlight 
 Function Spotlight  {
+
 $MultilineComment = @"
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\DesktopSpotlight]
 "DefaultCreatives"="[{\"f\":\"raf\",\"v\":\"1.0\",\"rdr\":[{\"c\":\"CDMLite\",\"u\":\"DesktopSpotlightSurface\"}],\"ad\":{\"landscapeImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_0.jpg\"},\"portraitImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_0.jpg\"},\"iconLabel\":\"Informationen zu diesem Bild\",\"iconHoverText\":\"Nusa Penida Island, Indonesien\\r\\n© Miniloc / iStock / Getty Images Plus\\r\\nRechtsklick, um mehr zu erfahren\",\"title\":\"Weniger? Sagt wer?\",\"description\":\"In den schärenreichen Gewässern der Javasee nördlich von Australien liegen die Kleinen Sunda-Inseln. Obwohl diese Inselkette kleiner ist als die Großen Sunda-Inseln, zu denen so bekannte Namen wie Java, Sumatra und Borneo gehören, gibt es auf den Kleinen Sunda-Inseln doch einige bekannte Orte. Bali gehört dazu, ebenso wie Lombok und Timor. Eine der kleineren Inseln des Archipels, Komodo, ist vielleicht auch wegen der übergroßen Echsen bekannt, die dort leben.\",\"copyright\":\"© miniloc / iStock / Getty Images Plus\",\"likeGlyph\":\"?\",\"dislikeGlyph\":\"?\",\"ctaText\":\"Weitere Informationen\",\"ctaUri\":\"https://www.bing.com/spotlight?spotlightId=MantaBayNusaPenidaIslandBali&q=Lesser+Sunda+Islands&FORM=MC13ER\",\"relatedContent\":[{\"glyph\":\"?\",\"label\":\"Ordnen Sie es zu\",\"actionUri\":\"https://www.bing.com/maps?osid=68b5adf3-0a1e-4655-91ed-ce0ec049c728&cp=-5.965754~96.503906&lvl=3&pi=0&imgid=aec3fdd6-b2cb-49e0-9b63-8135f1bebb05&v=2&sV=2&FORM=MC13ES\"},{\"glyph\":\"?\",\"label\":\"Weitere Fotos anzeigen\",\"actionUri\":\"https://www.bing.com/images/search?q=Lesser+Sunda+Islands&qft=+filterui:photo-photo&FORM=MC13ET\"},{\"glyph\":\"?\",\"label\":\"Inseln von Indonesien\",\"actionUri\":\"https://www.bing.com/search?q=how+many+islands+does+indonesia+have%3F&FORM=MC13EV\"},{\"glyph\":\"?\",\"label\":\"Nusa Penida erkunden\",\"actionUri\":\"https://www.bing.com/travel/place-information?q=Pulau+Nusa+Penida&SID=d3c337ab-a4fb-c574-1af9-9647cae0be8b&FORM=MC13EU\"}],\"relatedHotspots\":[{\"glyph\":\"\",\"label\":\"\",\"actionUri\":\"\"},{\"glyph\":\"\",\"label\":\"\"}],\"entityId\":\"100\"},\"tracking\":{\"baseUri\":\"https://ris.api.iris.microsoft.com/v1/a/{ACTION}?PID=425827255&CID=100&PG=IRIS000001.0000000820&&region=US&lang=EN-US&EID={EID}&ASID={ASID}&TIME={DATETIME}\"},\"prm\":{\"_id\":\"100\",\"_imp\":\"https://arc.msn.com/v3/Delivery/Events/Impression?PID=425827255&CID=100&BID=82185994&PG=IRIS000001.0000000820&LOCALE=EN-US&COUNTRY=US&ASID={ASID}\",\"_flight\":\"\"}},{\"f\":\"raf\",\"v\":\"1.0\",\"rdr\":[{\"c\":\"CDMLite\",\"u\":\"DesktopSpotlightSurface\"}],\"ad\":{\"landscapeImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_1.jpg\"},\"portraitImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_1.jpg\"},\"iconLabel\":\"Informationen zu diesem Bild\",\"iconHoverText\":\"Ronda, Spanien\\r\\n© Marcp_dmoz on Flickr / Getty Images\\r\\nRechtsklick, um mehr zu erfahren\",\"title\":\"Die geteilte Stadt\",\"description\":\"Antike Zivilisationen nutzten diesen Bergvorsprung im Süden der Iberischen Halbinsel als strategischen Standort für befestigte Siedlungen. Römer, Mauren und Westgoten trugen alle zu der modernen spanischen Stadt bei, die wir heute Ronda nennen.\",\"copyright\":\"© Marcp_dmoz on Flickr / Getty Images\",\"likeGlyph\":\"?\",\"dislikeGlyph\":\"?\",\"ctaText\":\"Weitere Informationen\",\"ctaUri\":\"https://www.bing.com/spotlight?spotlightId=ParadordeRonda&q=ronda+spain&FORM=MC13ER\",\"relatedContent\":[{\"glyph\":\"?\",\"label\":\"Ordnen Sie es zu\",\"actionUri\":\"https://www.bing.com/maps/?v=2&cp=39.169878~-3.930976&lvl=5&sty=b&q=Ronda%2C%20Spain&FORM=MC13ES\"},{\"glyph\":\"?\",\"label\":\"Weitere Fotos anzeigen\",\"actionUri\":\"https://www.bing.com/images/search?q=ronda+spain+images&FORM=MC13ET\"},{\"glyph\":\"?\",\"label\":\"Brücken von Spanien\",\"actionUri\":\"https://www.bing.com/search?q=bridges+of+spain&FORM=MC13EU\"},{\"glyph\":\"?\",\"label\":\"Andalusien erkunden\",\"actionUri\":\"https://www.bing.com/travel/place-information?q=Andalusia&SID=b009454b-b921-1477-fbf3-ea4c66d409b5&FORM=MC13EV\"}],\"relatedHotspots\":[{\"glyph\":\"\",\"label\":\"\",\"actionUri\":\"\"},{\"glyph\":\"\",\"label\":\"\",\"actionUri\":\"\"}],\"entityId\":\"101\"},\"tracking\":{\"baseUri\":\"https://ris.api.iris.microsoft.com/v1/a/{ACTION}?PID=425827258&CID=101&PG=IRIS000001.0000000820&&region=US&lang=EN-US&EID={EID}&ASID={ASID}&TIME={DATETIME}\"},\"prm\":{\"_id\":\"101\",\"_imp\":\"https://arc.msn.com/v3/Delivery/Events/Impression?PID=425827258&CID=101&BID=218005266&PG=IRIS000001.0000000820&LOCALE=EN-US&COUNTRY=US&ASID={ASID}\",\"_flight\":\"\"}},{\"f\":\"raf\",\"v\":\"1.0\",\"rdr\":[{\"c\":\"CDMLite\",\"u\":\"DesktopSpotlightSurface\"}],\"ad\":{\"landscapeImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_2.jpg\"},\"portraitImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_2.jpg\"},\"iconLabel\":\"Informationen zu diesem Bild\",\"iconHoverText\":\"Eine Hafenmole in Korinthia, Griechenland\\r\\nilias beros/ 500px Prime / Getty Images\\r\\nKlicken Sie rechts, um mehr zu erfahren\",\"title\":\"Über glatte Meere blicken\",\"description\":\"Korinthia ist eine regionale Einheit Griechenlands und liegt in der Region Peloponnes. Das sind die trockenen geografischen Fakten, aber das historische Erbe der Region ist eine viel interessantere Geschichte. Schon vor Tausenden von Jahren kämpften die Weltmächte um die Kontrolle über dieses Gebiet. Die meisten hatten es auf den strategisch wichtigen Isthmus von Korinth abgesehen, der die Halbinsel Peloponnes mit dem griechischen Festland verbindet. Die alten Griechen versuchten, eine Passage durch die Landbrücke zu schlagen (wo ist Zeus, wenn man ihn braucht?), um die Durchquerung der 8.320 Quadratmeilen großen Halbinsel zu erleichtern. Erst 1893 holte die Technik den Ehrgeiz ein und es wurde ein Kanal für den Seeverkehr gegraben. Die darauf folgende Entwicklung der Region hat dazu geführt, dass Teile von Korinthia zu Vorstädten von Athen geworden sind.\",\"copyright\":\"ilias beros/ 500px Prime / Getty Images\",\"likeGlyph\":\"?\",\"dislikeGlyph\":\"?\",\"ctaText\":\"Weitere Informationen\",\"ctaUri\":\"https://www.bing.com/spotlight?spotlightId=PierSeascapeKorinthia&q=corinthia+greece&FORM=MC13ER\",\"relatedContent\":[{\"glyph\":\"?\",\"label\":\"Ordnen Sie es zu\",\"actionUri\":\"https://www.bing.com/maps?osid=de105ea7-c2f9-4aa6-b09c-c9739b2d50e6&cp=38.828499~15.952622&lvl=5.357272&pi=0&imgid=91173d4c-6afb-4721-8820-9c8b71afd1ea&v=2&sV=2&form=S00027&FORM=MC13ES\"},{\"glyph\":\"?\",\"label\":\"Weitere Fotos anzeigen\",\"actionUri\":\"https://www.bing.com/images/search?&q=Corinthia%2c+Greece&qft=+filterui:photo-photo&FORM=MC13ET\"},{\"glyph\":\"?\",\"label\":\"Infos über das antike Korinth\",\"actionUri\":\"https://www.bing.com/search?q=ancient+corinth&FORM=MC13EU\"},{\"glyph\":\"?\",\"label\":\"Korinthia erkunden\",\"actionUri\":\"https://www.bing.com/travel/place-information?q=Corinthia&SID=559a7fd6-0c81-fd93-c1ff-7812f9fcc7d8&FORM=MC13EV\"}],\"relatedHotspots\":[{\"glyph\":\"\",\"label\":\"\",\"actionUri\":\"\"},{\"glyph\":\"\",\"label\":\"\",\"actionUri\":\"\"}],\"entityId\":\"102\"},\"tracking\":{\"baseUri\":\"https://ris.api.iris.microsoft.com/v1/a/{ACTION}?PID=425827259&CID=102&PG=IRIS000001.0000000820&&region=US&lang=EN-US&EID={EID}&ASID={ASID}&TIME={DATETIME}\"},\"prm\":{\"_id\":\"102\",\"_imp\":\"https://arc.msn.com/v3/Delivery/Events/Impression?PID=425827259&CID=102&BID=284608017&PG=IRIS000001.0000000820&LOCALE=EN-US&COUNTRY=US&ASID={ASID}\",\"_flight\":\"\"}},{\"f\":\"raf\",\"v\":\"1.0\",\"rdr\":[{\"c\":\"CDMLite\",\"u\":\"DesktopSpotlightSurface\"}],\"ad\":{\"landscapeImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_3.jpg\"},\"portraitImage\":{\"asset\":\"C:\\\\WINDOWS\\\\SystemApps\\\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\\\DesktopSpotlight\\\\Assets\\\\Images\\\\image_3.jpg\"},\"iconLabel\":\"Informationen zu diesem Bild\",\"iconHoverText\":\"Sagano Bamboo Forest, Kyoto, Japan\\r\\n© Piriya Photography /Moment /Getty Images\\r\\nRechtsklick, um mehr zu erfahren.\",\"title\":\"Ein Spaziergang durch den Bambuswald\",\"description\":\"Auch wenn sich die Besucher dieses Ortes wie in einer anderen Welt fühlen, sind sie doch nur einen Steinwurf vom städtischen Treiben entfernt. Gleich hinter dem westlichen Rand von Kyoto, Japan, liegt der Bezirk Arashiyama. Die Gegend ist bekannt für wunderschöne Naturlandschaften und Attraktionen, darunter der Sagano-Bambuswald. Ein Spaziergang auf den Pfaden des Waldes ist nicht nur ein visueller Genuss, wenn das Tageslicht durch die tausenden grünen Bambusstämme fällt, sondern auch ein Genuss für die Ohren. Wenn der Wind durch den Wald weht, erzeugt er ein unverwechselbares Geräusch, das oft als einer der einprägsamsten Aspekte des Waldes genannt wird.\",\"copyright\":\"© Piriya Photography / Moment / Getty Images\",\"likeGlyph\":\"?\",\"dislikeGlyph\":\"?\",\"ctaText\":\"Weitere Informationen\",\"ctaUri\":\"https://www.bing.com/spotlight?spotlightId=BambooForestArashiyama&q=sagano+bamboo+forest%2C+arashiyama&FORM=MC13ER\",\"relatedContent\":[{\"glyph\":\"?\",\"label\":\"Ordnen Sie es zu\",\"actionUri\":\"https://www.bing.com/maps?osid=edd3910d-30e4-4faf-aad8-b43f1332ba62&cp=37.245355~92.776154&lvl=4&v=2&sV=2&FORM=MC13ES\"},{\"glyph\":\"?\",\"label\":\"Weitere Fotos anzeigen\",\"actionUri\":\"https://www.bing.com/images/search?q=Sagano+Bamboo+Forest%2c+Arashiyama%2c+Japan+images&FORM=MC13ET\"},{\"glyph\":\"?\",\"label\":\"Bambusfakten\",\"actionUri\":\"https://www.bing.com/search?q=bamboo&FORM=MC13EU\"},{\"glyph\":\"?\",\"label\":\"Kyoto erkunden\",\"actionUri\":\"https://www.bing.com/travel/place-information?q=Kyoto&SID=016f8629-d61d-3045-0068-c8fcefa64237&FORM=MC13EV\"}],\"relatedHotspots\":[{\"glyph\":\"\",\"label\":\"\",\"actionUri\":\"\"},{\"glyph\":\"\",\"label\":\"\"}],\"entityId\":\"103\"},\"tracking\":{\"baseUri\":\"https://ris.api.iris.microsoft.com/v1/a/{ACTION}?PID=425827260&CID=103&PG=IRIS000001.0000000820&&region=US&lang=EN-US&EID={EID}&ASID={ASID}&TIME={DATETIME}\"},\"prm\":{\"_id\":\"103\",\"_imp\":\"https://arc.msn.com/v3/Delivery/Events/Impression?PID=425827260&CID=103&BID=1605631696&PG=IRIS000001.0000000820&LOCALE=EN-US&COUNTRY=US&ASID={ASID}\",\"_flight\":\"\"}}]"
@@ -794,12 +949,12 @@ $MultilineComment = @"
 "WallpaperRefresh"="2026-03-17T22:44:03Z"
 "State"="{
   \"Version\":0,
-  \"RetrieveIrisContentSuccess\":false,
+  \"RetrieveIrisContentSuccess\":true,
   \"RetrieveIrisContentStatusCode\":0,
-  \"RetrieveIrisContentSuccessDate\":\"\",
-  \"RetrieveIrisContentLastAttemptDate\":\"\",
+  \"RetrieveIrisContentSuccessDate\":\"2026-03-17T22:44:03Z\",
+  \"RetrieveIrisContentLastAttemptDate\":\"2026-03-17T22:44:03Z\",
   \"RetrieveIrisContentRetryCount\":0,
-  \"RetrieveIrisContentRetryDate\":\"\",
+  \"RetrieveIrisContentRetryDate\":\"2026-03-17T22:44:03Z\",
   \"RetryTaskCount\":0,
   \"LastTriggerType\":3,
   \"LastBackgroundTaskRunDate\":\"2026-03-17T22:44:03Z\"
@@ -815,18 +970,34 @@ $MultilineComment = @"
 "ImageIndex"=dword:00000003
 
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\DesktopSpotlight\Settings]
-"SpotlightDisabledReason"=dword:00000064
-"OneTimeUpgrade"=dword:00000001
+"SpotlightDisabledReason"=-
+"OneTimeUpgrade"=dword:00000000
 "PeriodicUpgrade"=hex(b):41,28,90,e6,5e,b6,dc,01
-"IsRestoreLogon"=dword:00000000
+"IsRestoreLogon"=dword:00000001
 "IsDisabledByCommercialControl"=dword:00000000
 "EnabledState"=dword:00000001
 "SpotlightIconIdShown"="%SystemRoot%\\system32\\imageres.dll,-8201"
 "SpotlightNotOnboardedReason"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers]
+"BackgroundType"=dword:00000003
+
+[HKEY_CURRENT_USER\Control Panel\Desktop]
+"LockScreenAutoLockActive"="0"
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"RotatingLockScreenEnabled"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Lock Screen]
+"SlideshowEnabled"=dword:00000000
 "@
     Set-Content -Path "$env:TEMP\Spotlight.reg" -Value $MultilineComment -Force
     Start-Process -FilePath "regedit.exe" -ArgumentList "/S `"$env:TEMP\Spotlight.reg`"" -NoNewWindow -Wait
-    $Smanifest = (Get-AppxPackage *ContentDeliveryManager*).InstallLocation + '\AppxManifest.xml' ; Add-AppxPackage -DisableDevelopmentMode -Register $Smanifest
+    $manifest = (Get-AppxPackage *ContentDeliveryManager*).InstallLocation + '\AppxManifest.xml' ;
+    Add-AppxPackage -DisableDevelopmentMode -Register $manifest
+    $manifest2 = (Get-AppxPackage *MicrosoftWindows.Client.CBS*).InstallLocation + '\AppxManifest.xml' ;
+    Add-AppxPackage -DisableDevelopmentMode -Register $manifest2
+
         Write-Host "Spotlight Applied. Will be effective at Next reboot" -ForegroundColor Green
 }
 
@@ -888,6 +1059,17 @@ DisabledByDefault"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning]
 "FirstRunComplete"=dword:00000001
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\general]
+"disabletraining"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\specific]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\specific\adaptivefloatie]
+"disabletrainingofadaptivefloatie"=dword:00000001
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning\AutopilotSettings]
 "DisableAutopilotAgilityProductVersionTelemetry"=dword:00000001
@@ -1220,6 +1402,92 @@ $MultilineComment = @"
 @="powershell -windowstyle hidden -command \"Start-Process cmd -ArgumentList '/c takeown /f \\\"%1\\\" && icacls \\\"%1\\\" /grant *S-1-3-4:F /t /c /l & pause' -Verb runAs\""
 "IsolatedCommand"="powershell -windowstyle hidden -command \"Start-Process cmd -ArgumentList '/c takeown /f \\\"%1\\\" && icacls \\\"%1\\\" /grant *S-1-3-4:F /t /c /l & pause' -Verb runAs\""
 
+; Search target file
+; »» Seek Target of folders
+[HKEY_CLASSES_ROOT\Directory\shell\Find.Target]
+@="»»»   Seek Target"
+
+[HKEY_CLASSES_ROOT\Directory\shell\Find.Target\command]
+@="\"explorer.exe\" /select,\"%1\""
+
+[HKEY_CLASSES_ROOT\*\shell\Find.Target]
+@="»»»   Seek Target"
+[HKEY_CLASSES_ROOT\*\shell\Find.Target\command]
+@="\"explorer.exe\" /select,\"%1\""
+
+; Make CAB (maximum Compression LZX )
+[HKEY_CLASSES_ROOT\*\shell\MakeCAB]
+@="Make CAB (Maximum LZX Compression)"
+[HKEY_CLASSES_ROOT\*\shell\MakeCAB\command]
+@="makecab.exe /D CompressionType=LZX /D CompressionMemory=21 \"%1\""
+
+; "Command Console here" on Folders and Drives
+[HKEY_CLASSES_ROOT\Directory\shell\Command Console here]
+@=">:©   Command Console here"
+[HKEY_CLASSES_ROOT\Directory\shell\Command Console here\command]
+@="cmd.exe /k cd %1 "
+[HKEY_CLASSES_ROOT\Drive\shell\Command Console here]
+@=">:©   Command Console here"
+[HKEY_CLASSES_ROOT\Drive\shell\Command Console here\command]
+@="cmd.exe /k \"cd %L\""
+
+; Ouvre les fichiers .nfo et .sif avec Notepad
+[HKEY_CLASSES_ROOT\.nfo]
+@="txtfile"
+"PerceivedType"="text"
+"ContentType"="text/plain"
+[-HKEY_CLASSES_ROOT\.nfo\PersistentHandler]
+[HKEY_CLASSES_ROOT\.nfo\PersistentHandler]
+@="{5e941d80-bf96-11cd-b579-08002b30bfeb}"
+[HKEY_CLASSES_ROOT\.nfo\ShellNew]
+"NullFile"=""
+
+[HKEY_CLASSES_ROOT\.sif]
+@="txtfile"
+"PerceivedType"="text"
+"ContentType"="text/plain"
+[-HKEY_CLASSES_ROOT\.sif\PersistentHandler]
+[HKEY_CLASSES_ROOT\.sif\PersistentHandler]
+@="{5e941d80-bf96-11cd-b579-08002b30bfeb}"
+[HKEY_CLASSES_ROOT\.sif\ShellNew]
+"NullFile"=""
+
+[HKEY_CLASSES_ROOT\.txt]
+@="txtfile"
+"PerceivedType"="text"
+"Content Type"="text/plain"
+[HKEY_CLASSES_ROOT\.txt\PersistentHandler]
+@="{5e941d80-bf96-11cd-b579-08002b30bfeb}"
+[HKEY_CLASSES_ROOT\.txt\ShellNew]
+"NullFile"=""
+
+;Ajoute la barre des langues
+[HKEY_CLASSES_ROOT\CLSID\{540D8A8B-1C3F-4E32-8132-530F6A502090}]
+@="Language bar"
+"MenuTextPUI"="@%SystemRoot%\\System32\\msutb.dll,-325"
+;Retirer la barre de language
+[-HKEY_CLASSES_ROOT\CLSID\{540D8A8B-1C3F-4E32-8132-530F6A502090}]
+
+;Adds "Command Console here" on right click
+[HKEY_CLASSES_ROOT\Directory\shell\cmd]
+@="Command Console here"
+[HKEY_CLASSES_ROOT\Directory\shell\cmd\command]
+@="cmd.exe /k \"cd %L\""
+[HKEY_CLASSES_ROOT\Drive\shell\cmd]
+@="Command Console here"
+[HKEY_CLASSES_ROOT\Drive\shell\cmd\command]
+@="cmd.exe /k \"cd %L\""
+
+; Explorer detailles cvolumns
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Streams\Defaults]
+"{F3364BA0-65B9-11CE-A9BA-00AA004AE837}"=hex:1c,00,00,00,04,00,00,00,00,00,00,\
+  00,00,00,9a,00,00,00,00,00,01,00,00,00,00,00,00,00,f0,f0,f0,f0,14,00,03,00,\
+  9a,00,00,00,00,00,00,00,30,00,00,00,fd,df,df,fd,0f,00,05,00,24,00,10,00,2e,\
+  00,46,00,00,00,00,00,01,00,00,00,02,00,00,00,03,00,00,00,04,00,00,00,0f,01,\
+  47,00,92,00,76,00,3c,00,00,00,00,00,01,00,00,00,02,00,00,00,03,00,00,00,06,\
+  00,00,00,ff,ff,ff,ff,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+  00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\System]
 "EnableCdp"=dword:00000000
 
@@ -1249,6 +1517,18 @@ $MultilineComment = @"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Provisioning]
 "FirstRunComplete"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\general]
+"disabletraining"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\specific]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\specific\adaptivefloatie]
+"disabletrainingofadaptivefloatie"=dword:00000001
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Yann]
 "post-setup-script"="1.3.1"
@@ -1281,6 +1561,21 @@ function Set-DefaultPowerSetting {
 
 # Function to Apply the Recommended Privacy Settings
 function Set-RecommendedPrivacySettings {
+
+     Write-Host "Disabling Xbox Services Settings . . ."
+# Disable Xbox Services
+Stop-Service -Name XblAuthManager -Force
+Set-Service -Name XblAuthManager -StartupType Disabled
+Stop-Service -Name XblAuthManager -Force
+Set-Service -Name XblAuthManager -StartupType Disabled
+Stop-Service -Name XblGameSave -Force
+Set-Service -Name XblGameSave -StartupType Disabled
+Stop-Service -Name XboxGipSvc -Force
+Set-Service -Name XboxGipSvc -StartupType Disabled
+Stop-Service -Name XboxNetApiSvc -Force
+Set-Service -Name XboxNetApiSvc -StartupType Disabled
+Stop-Service -Name BcastDVRUserService -Force
+Set-Service -Name BcastDVRUserService -StartupType Disabled
      
      Write-Host "Applying Recommended Privacy Settings . . ."
 
@@ -1291,8 +1586,16 @@ Windows Registry Editor Version 5.00
 ;Privacy and Security Settings
 ;Configure Windows Features - Remove various files folders startup entries and policies 
 
-;Disable Account Info
+;Enable Account Info
 [HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\userAccountInformation]
+"Value"="Allow"
+
+;Prevent deactivation camera Led
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\OEM\Device\Capture]
+"NoPhysicalCameraLED"=-
+
+;alllow or refuse camera acces to all aps
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam]
 "Value"="Allow"
 
 ;Location Tracking
@@ -1415,7 +1718,7 @@ Windows Registry Editor Version 5.00
 
 ;0 -Avoid the driver signing enforcement for EV cert - 1 -SHA256 Microsoft Windows signed drivers which is further enforced via Secure Boot
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\CI\Policy]
-"UpgradedSystem"=dword:00000000
+"UpgradedSystem"=dword:00000001
 
 ;Windows Error Reporting
 
@@ -1485,11 +1788,11 @@ Windows Registry Editor Version 5.00
 
 ;0 - Disable Prefetch - 1 - Enable Prefetch when the application starts - 2 - Enable Prefetch when the device starts up - 3 - Enable Prefetch when the application or device starts up
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Session Manager\Memory Management\PrefetchParameters]
-"EnablePrefetcher"=dword:00000003
+"EnablePrefetcher"=dword:00000002
 
 ;0 - Disable SuperFetch - 1 - Enable SuperFetch when the application starts up - 2 - Enable SuperFetch when the device starts up - 3 - Enable SuperFetch when the application or device starts up
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Session Manager\Memory Management\PrefetchParameters]
-"EnableSuperfetch"=dword:00000003
+"EnableSuperfetch"=dword:00000002
 
 ;0 - Disable It - 1 - Default
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Session Manager\Memory Management\PrefetchParameters]
@@ -1575,48 +1878,11 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\default\ApplicationManagement\AllowGameDVR]
 "value"=dword:00000000
 
-;Disable Xbox Services
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XblAuthManager]
-"Start"=dword:00000004
-
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XblGameSave]
-"Start"=dword:00000004
-
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XboxGipSvc]
-"Start"=dword:00000004
-
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\XboxNetApiSvc]
-"Start"=dword:00000004
-
-[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\BcastDVRUserService]
-"Start"=dword:00000004
-
-[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\xbgm]
-"Start"=dword:00000004
-
-[HKLM\System\ControlSet001\Services\BcastDVRUserService]
-"Start"=dword:00000004
-
-[HKLM\System\ControlSet001\Services\XblAuthManager]
-"Start"=dword:00000004
-
-[HKLM\System\ControlSet001\Services\XblGameSave]
-"Start"=dword:00000004
-
-[HKLM\System\ControlSet001\Services\XboxGipSvc]
-"Start"=dword:00000004
-
-[HKLM\System\ControlSet001\Services\XboxNetApiSvc]
-"Start"=dword:00000003
-
-[HKLM\System\ControlSet001\Services\xbgm]
-"Start"=dword:00000003
-
 ;Network and Internet 
 ;Change adapter options 
 
 [HKEY_LOCAL_MACHINE\System\ControlSet001\Services\Tcpip6\Parameters]
-"DisabledComponents"=dword:00000000
+"DisabledComponents"=-
 
 ;0 - Disable LMHOSTS Lookup on all adapters - 1 - Enable
 [HKEY_LOCAL_MACHINE\System\ControlSet001\Services\NetBT\Parameters]
@@ -1742,16 +2008,10 @@ Windows Registry Editor Version 5.00
 "DoNotShowFeedbackNotifications"=dword:00000001
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection]
-"AllowTelemetry"=dword:00000001
+"AllowTelemetry"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Application-Experience/Program-Telemetry]
 "Enabled"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
-"AllowTelemetry"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
-"DoNotShowFeedbackNotifications"=dword:00000001
 
 0;1 - Do not let Microsoft provide more tailored experiences with relevant tips and recommendations by using your diagnostic data
 [HKCU\Software\Microsoft\Windows\CurrentVersion\Privacy]
@@ -1922,6 +2182,67 @@ LetAppsSyncWithDevices=dword:00000002
 ;Disables the Advertising ID for All Users
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo]
 "DisabledByGroupPolicy"=dword:00000001
+
+; Wacth and Control Powershell and Wscript
+[HKEY_CURRENT_USER\Software\Microsoft\Windows Script\Settings\Telemetry]
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows Script\Settings\Telemetry\cscript.exe]
+"VBScriptSetScriptStateStarted"=hex(b):b0,0f,b8,00,00,00,00,00
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows Script\Settings\Telemetry\msedge.exe]
+"JScript9LegacySetScriptStateStarted"=dword:01201321
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows Script\Settings\Telemetry\msiexec.exe]
+"VBScriptSetScriptStateStarted"=hex(b):71,05,62,00,00,00,00,00
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows Script\Settings\Telemetry\winword.exe]
+"JScript9LegacySetScriptStateStarted"=dword:004e5bb1
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows Script\Settings\Telemetry\wmiprvse.exe]
+"JScript9LegacySetScriptStateStarted"=dword:034e5bd8
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell]
+"EnableScripts"=dword:00000001
+"ExecutionPolicy"="Unrestricted"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging]
+"EnableScriptBlockLogging"=dword:00000001
+"EnableScriptBlockInvocationLogging"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell\Transcription]
+"EnableTranscripting"=dword:00000001
+"OutputDirectory"="c:\\Logs"
+"EnableInvocationHeader"=dword:00000001
+
+; Control the Settings Backup
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\SettingSync]
+"DisableSettingSyncUserOverride"=dword:00000000
+"DisableSettingSync"=dword:00000000
+"DisableAppSyncSettingSync"=dword:00000000
+"DisableAppSyncSettingSyncUserOverride"=dword:00000000
+"DisableApplicationSettingSync"=dword:00000000
+"DisableApplicationSettingSyncUserOverride"=dword:00000000
+"DisableCredentialsSettingSync"=dword:00000000
+"DisableCredentialsSettingSyncUserOverride"=dword:00000000
+"DisableDesktopThemeSettingSync"=dword:00000000
+"DisableDesktopThemeSettingSyncUserOverride"=dword:00000000
+"DisablePersonalizationSettingSync"=dword:00000000
+"DisablePersonalizationSettingSyncUserOverride"=dword:00000000
+"DisableStartLayoutSettingSync"=dword:00000000
+"DisableStartLayoutSettingSyncUserOverride"=dword:00000000
+"DisableSyncOnPaidNetwork"=dword:00000000
+"DisableWebBrowserSettingSync"=dword:00000000
+"DisableWebBrowserSettingSyncUserOverride"=dword:00000000
+"DisableWindowsSettingSync"=dword:00000000
+"DisableWindowsSettingSyncUserOverride"=dword:00000000
+
+; controls the USB Notifications
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Shell\USB]
+"HideUsbErrorNotifyOptionUI"=dword:00000000
+"HideWeakChargerNotifyOptionUI"=dword:00000000
+"NotifyOnUsbErrors"=dword:00000001
+"NotifyOnWeakCharger"=dword:00000001
 "@
     # Write the registry changes to a file and silently import it using regedit
     Set-Content -Path "$env:TEMP\Recommended_Privacy_Settings.reg" -Value $MultilineComment -Force
@@ -1962,6 +2283,15 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings]
 "RestartNotificationsAllowed"=dword:00000001
 
+; Windows Updates will download even on metered coneections, on all products, and will notify before restart
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings]
+"AllowAutoWindowsUpdateDownloadOverMeteredNetwork"=dword:00000001
+"AllowMUUpdateService"=dword:00000001
+"IsContinuousInnovationOptedIn"=dword:00000001
+"IsExpedited"=dword:00000001
+"RestartNotificationsAllowed2"=dword:00000001
+"RestartNotificationsAllowed"=dword:00000001
+
 rem 0 - Do not deactivate Malicious Software Removal Tool offered via Windows Updates (MRT) 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\MRT]
 "DontOfferThroughWUAU"=-
@@ -1984,6 +2314,7 @@ rem 0 - Do not deactivate Malicious Software Removal Tool offered via Windows Up
 ; Update apps automatically / 2 - Off / 4 - On 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsStore\WindowsUpdate]
 "AutoDownload"=dword:00000004
+
 "@
     Set-Content -Path "$env:TEMP\Recommended_Windows_Update_Settings.reg" -Value $MultilineComment -Force
     # import reg file
@@ -2057,6 +2388,26 @@ Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\WindowsNotepad]
 "DisableAIFeatures"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint]
+"DisableImageCreator"=dword:00000001
+"DisableCocreator"=dword:00000001
+"DisableGenerativeFill"=dword:00000001
+"DisableGenerativeErase"=dword:00000001
+"DisableRemoveBackground"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\UIPI]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\UIPI\Clipboard]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\UIPI\Clipboard\ExceptionFormats]
+"CF_BITMAP"=dword:00000002
+"CF_DIB"=dword:00000008
+"CF_DIBV5"=dword:00000011
+"CF_OEMTEXT"=dword:00000007
+"CF_PALETTE"=dword:00000009
+"CF_TEXT"=dword:00000001
+"CF_UNICODETEXT"=dword:0000000d
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge]
 "CopilotCDPPageContext"=dword:00000000
@@ -2606,7 +2957,7 @@ Windows Registry Editor Version 5.00
 ; NETWORK AND INTERNET
 ; allow other network users to control or disable the shared internet connection
 [HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Network\SharedAccessConnection]
-"EnableControl"=dword:00000001
+"EnableControl"=dword:00000000
 
 ; SYSTEM AND SECURITY
 ; revert adjust for best performance of programs
@@ -2615,7 +2966,7 @@ Windows Registry Editor Version 5.00
 
 ; remote assistance
 [HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Remote Assistance]
-"fAllowToGetHelp"=dword:00000001
+"fAllowToGetHelp"=dword:00000000
 
 ; TROUBLESHOOTING
 ; automatic maintenance
@@ -3229,7 +3580,7 @@ Windows Registry Editor Version 5.00
 "LastUpdated"=dword:ffffffff
 "LogPixels"=dword:00000060
 "Pattern Upgrade"="TRUE"
-"LockScreenAutoLockActive"="1"
+"LockScreenAutoLockActive"="0"
 "ScreenSaverIsSecure"=dword:00000001
 "ScreenSaveTimeOut"=dword:000000fa
 "AutoEndTasks"=dword:00000001
@@ -3515,6 +3866,36 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Control Panel\Accessibility\HighContrast]
 "Flags"="4194"
 
+;Customize Terminakl Console
+; first value modifies background color / Seciond value is text color /
+  ; 0=por         8=gris (Light Dark ;-D )
+  ; 1=blue         9=Clear Blue
+  ; 2=green         a=clear green
+  ; 3=turquoise    b=turquoise
+  ; 4=red          c=red 
+  ; 5=purple       d=clear purple
+  ; 6=yellow        e=clear yellow
+  ; 7=white        f=shinny white (!)
+[HKEY_CURRENT_USER\Console]
+; Background Color :
+"ColorTable00"=dword:00e5ebeb
+; text color :
+"ColorTable07"=dword:00000000
+"QuickEdit"=dword:00000800
+"FontSize"=dword:000c0007
+"FontFamily"=dword:00000036
+"FontWeight"=dword:00000190
+"FaceName"="Lucida Console"
+"HistoryNoDup"=dword:00000000
+"ScreenBufferSize"=dword:012c0064
+"HistoryBufferSize"=dword:00000100
+"WindowSize"=dword:00190064
+
+; Num Lock On
+[HKEY_USERS\.DEFAULT\Control Panel\Keyboard]
+"InitialKeyboardIndicators"="2"
+[HKEY_CURRENT_USER\Control Panel\Keyboard]
+"InitialKeyboardIndicators"="2"
 
 [HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Preference]
 "On"="0"
@@ -3668,6 +4049,7 @@ AutoRepeatRate=6
 "ScreenSaverIsSecure"="1"
 "ScreenSaveTimeOut"="180"
 "SCRNSAVE.EXE"="C:\\WINDOWS\\system32\\PhotoScreensaver.scr"
+;afficher icones en 24bits au lieu de 16
 "SnapSizing"="1"
 "TileWallpaper"="0"
 "WallpaperOriginX"=dword:00000000
@@ -3684,7 +4066,7 @@ AutoRepeatRate=6
 "UserPreferencesMask"=hex:9e,1e,07,80,12,00,00,00
 "LastUpdated"=dword:ffffffff
 "Pattern Upgrade"="TRUE"
-"LockScreenAutoLockActive"="1"
+"LockScreenAutoLockActive"="0"
 "ScreenSaverIsSecure"=dword:00000001
 "ScreenSaveTimeOut"=dword:000000fa
 "AutoEndTasks"=dword:00000001
@@ -3697,10 +4079,16 @@ AutoRepeatRate=6
 "DelayLockInterval"=dword:00000000
 "AutoColorization"=dword:00000001
 "ImageColor"=dword:afd4e846
+"LowPowerActive"="1"
+"LowPowerTimeOut"="1"
 
-
+; no Animations, Full res icons
 [HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics]
 "MinAnimate"="0"
+"Shell Icon BPP"="24"
+"Shell Icon Size"="32"
+;"IconSpacing"="-1110"
+;"IconVerticalspacing"="-960"
 
 ; --IMMERSIVE CONTROL PANEL--
 ; PRIVACY
@@ -4061,7 +4449,7 @@ AutoRepeatRate=6
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\bluetoothSync]
 "Value"="Allow"
 
-; disable let websites show me locally relevant content by accessing my language list 
+; Enables let websites show me locally relevant content by accessing my language list 
 [HKEY_CURRENT_USER\Control Panel\International\User Profile]
 "HttpAcceptLanguageOptOut"=dword:00000001
 
@@ -4164,7 +4552,7 @@ AutoRepeatRate=6
 "EnableSnapAssistFlyout"=dword:00000000
 "Filter"=dword:00000000
 "FolderContentsInfoTip"=dword:00000000
-"Hidden"=dword:00000001
+"Hidden"=dword:00000000
 "HideFileExt"=dword:00000000
 "HideIcons"=dword:00000000
 "HideMergeConflicts"=dword:00000001
@@ -4198,7 +4586,7 @@ AutoRepeatRate=6
 "ShowStatusBar"=dword:00000000
 "ShowCopilotButton"=dword:00000000
 "ShowNotificationIcon"=dword:00000001
-"ShowPreviewHandlers"=dword:00000000
+"ShowPreviewHandlers"=dword:00000001
 "ShowSyncProviderNotifications"=dword:00000000
 "ShowDriveLettersFirst"=dword:00000001
 "ShowEncryptCompressedColor"=dword:00000001
@@ -4336,15 +4724,15 @@ AutoRepeatRate=6
 "LockInstanceType"=dword:00000003
 "HasMigratedDetailedStatus"=dword:00000001
 "PreplacedWidgetsAttempted"=dword:00000000
-"SlideshowEnabled"=dword:00000001
+"SlideshowEnabled"=dword:00000000
 "TileMigrated"=dword:00000003
 "SlideshowSourceDirectoriesSet"=dword:00000001
-"SlideshowEnabledOnBattery"=dword:00000001
+"SlideshowEnabledOnBattery"=dword:00000000
 "SlideshowIncludeCameraRoll"=dword:00000001
 "SlideshowDuration"=dword:0036ee80
-"SlideshowDirectoryPath1"="pHAFA8BUg/E0gouOpBhoYjAArADMdmBAvMkOcBAAAAAAAAAAAAAAAAAAAAAAAAAeAEDAAAAAA8GXJrQEAU1clJ3cAQGAJAABA8uvBiVq68GXJrgLAAAAz9DAAAAAOAAAAAAAAAAAAoDAAAAAA0q6pCQVAMHAlBgcAMHAAAAQAMHAoBQZAwGAsBwMAIDAuAAZAwGAsBALA0CAyAQMAgDAxAwMAAAAUAAUAEDAAAAAA0GXcFGEAkXYu5WMAwDAJAABA8uvQu1MY1GXiFmLAAAAQgcBAAAALAAAAAAAAAAAAAAAAAAAAcj+rCQeAEGAuBgbAEDAAAAFAoFAxAAAAAAAvxlBLFDBP5WZEJXa2VGAAIEAJAABA8uvQuFuZ9GXGskLAAAAZSsDAAAADAAAAAAAaAHAQCAAAAAAAsjwqCwTA4GAlBARAIHApBgdAUGAAAAGAgJAxAAAAAAAtxF1DGBBJ1WYnV2cAAgdAkAAEAw7+C5WPnVbc1GYuAAAAY7vOAAAAUAAAAAAAoBYAAJPAAAAAAAG4RIAJBQbAEGAnBQZAMHAAAAQAcHApBgbAQGAvBwdAMHAuAwcAQHAvBgcAEGAnBQZA4CAkBAbAwGAsAQLAIDAxAwNAcDA5AAAAYBAMAAAAkCAv7LCAYBAAAA"
-"SlideshowDirectoryPath2"="2AAFA8BVlgkHDQ5eD3UsxkuR0yUjVDCAAAgGA4+u+PCAAABAf6KkpuDoA6El8mpEXDVQEAAAAAA"
-"SlideshowEnabledOnBattery"=dword:00000001
+"SlideshowDirectoryPath1"="CHAFA8BUg/E0gouOpBhoYjAArADMdmBAvMkOcBAAAAAAAAAAAAAAAAAAAAAAAAgVAEDAAAAAAwHXikDEAcVauR2b3NHAABQCAQAAv7bgYlqO8xlI54CAAAQ9NAAAAAQAAAAAAAAAAAAAAAAAAAAAP0SCBcFApBgbAQGAvBwdAMHAAAgFAoEAxAAAAAAA4xFGkBBAXVmYAgDAJAABA8uvBiVR7gHXYQmLAAAAKCCAAAAABAAAAAAAAAAAAAAAAAAAAoxr/BwVAUGAiBAAAIBAzDQMAAAAAAAfcFdeQAwVhxGbwFGclJ3cAAgRAkAAEAw7+iHXYQGfcFdeuAAAAExCCAAAAkAAAAAAAAAAAAAAAAAAAAAKEILAXBQYAwGAsBAcAEGAwBQZAIHAzBAAAoBATCAAAcCAv7bhAAAAxMFUTdbnu+fjc8/QByIhApzoz1SaAAAAkBAAAAwHAAAAsAAAAcHApBgbAQGAvBwdAMHAuAQaA0GAtBQZAIHAzBQaAYHAlBwYA8GAuBAdAIHAvBAbAAHAhBgbAUGAsBwXAMGA3BQNA4GAxAAaAIDA0BAeAkHAlBwdAkHAAAAAAAAAAAAAAoBAAAA"
+"SlideshowDirectoryPath2"="pHAFA8BUg/E0gouOpBhoYjAArADMdmBAvMkOcBAAAAAAAAAAAAAAAAAAAAAAAAAeAEDAAAAAA8GXJrQEAU1clJ3cAQGAJAABA8uvBiVq68GXJrgLAAAAz9DAAAAAOAAAAAAAAAAAAoDAAAAAA0q6pCQVAMHAlBgcAMHAAAAQAMHAoBQZAwGAsBwMAIDAuAAZAwGAsBALA0CAyAQMAgDAxAwMAAAAUAAUAEDAAAAAA0GXcFGEAkXYu5WMAwDAJAABA8uvQu1MY1GXiFmLAAAAQgcBAAAALAAAAAAAAAAAAAAAAAAAAcj+rCQeAEGAuBgbAEDAAAAFAoFAxAAAAAAAvxlBLFDBP5WZEJXa2VGAAIEAJAABA8uvQuFuZ9GXGskLAAAAZSsDAAAADAAAAAAAaAHAQCAAAAAAAsjwqCwTA4GAlBARAIHApBgdAUGAAAAGAgJAxAAAAAAAtxF1DGBBJ1WYnV2cAAgdAkAAEAw7+C5WPnVbc1GYuAAAAY7vOAAAAUAAAAAAAoBYAAJPAAAAAAAG4RIAJBQbAEGAnBQZAMHAAAAQAcHApBgbAQGAvBwdAMHAuAwcAQHAvBgcAEGAnBQZA4CAkBAbAwGAsAQLAIDAxAwNAcDA5AAAAYBAMAAAAkCAv7LCAYBAAAA"
+"SlideshowDirectoryPath3"="2AAFA8BVlgkHDQ5eD3UsxkuR0yUjVDCAAAgGA4+u+PCAAABAf6KkpuDoA6El8mpEXDVQEAAAAAA"
 "SlideshowIncludeCameraRoll"=dword:00000001
 "AutoSelectWidgetsOnLockScreen"=dword:00000001
 
@@ -4920,8 +5308,6 @@ AutoRepeatRate=6
 [HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\CloudContent]
 "enableTailoredExperiencesWithDiagnosticData"=dword:00000001
 
-[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\CurrentVersion]
-
 [HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\DataCollection]
 "AllowTelemetry"=dword:00000000
 "DoNotShowFeedbackNotifications"=dword:00000001
@@ -4973,6 +5359,7 @@ AutoRepeatRate=6
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Policies\DataCollection]
 "AllowTelemetry"=dword:00000000
 "MaxTelemetryAllowed"=dword:00000000
+
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current]
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PolicyManager\current\AboveLock]
@@ -5012,7 +5399,8 @@ function Set-Wupdatecleaned {
                                         & net start wuauserv 
                                         & UsoClient.exe RefreshSettings' -Verb runAs
                                         Write-Host "Windows Update cleaned."   -ForegroundColor Green
-}# Clears WU
+}
+# WU Cleaned and set
 
 # End of Registry Optimizations
 
@@ -5025,12 +5413,12 @@ function Get-UsbStickDrive {
         $Volume = $_;
         if ( 
 
-          ( $Volume.DriveType -eq "Removable" ) -and
+          #( $Volume.DriveType -eq "Removable" ) -and
           ( $Volume.FileSystemType -eq "NTFS" ) -and 
           ( $Volume.DriveLetter -ne "" ) -and
-          ( Test-Path "$($Volume.DriveLetter):\magic\home.zip" ) 
+          ( Test-Path "$($Volume.DriveLetter):\magic\Magic.cab" ) 
 
-        ) { $MagicStick = "$($Volume.DriveLetter):\magic\home.zip"; }
+        ) { $MagicStick = "$($Volume.DriveLetter):"; }
     }
 }
 catch {}
@@ -5041,13 +5429,21 @@ catch {}
     if ( !(Test-Path -Path "C:\Users\Public\Yann\img0.jpg") ) {
     New-Item -Path "C:\Users\Public" -Name "Yann" -ItemType "Directory" | Out-Null;
     } 
-    Expand-Archive -Force "$MagicStick" "C:\Users\Public\Yann\magic" -Verbose
-    Set-Location -Path "C:\Users\Public\Yann\magic";
+    Expand -r -F:* $MagicStick\magic\Magic.cab "$env:Public\"
+    Expand -r -F:* $MagicStick\magic\first-logon-script.cab  "$env:Public\Yann\"
+    Expand -r -F:* $MagicStick\magic\software-options_1.31.cab  "$env:Public\Yann\"
+    Expand -r -F:* $MagicStick\magic\software-customization_1.31.cab  "$env:Public\Yann\"
+    Expand -r -F:* $MagicStick\magic\windows_languages_1.3.cab  "$env:Public\Yann\"
+    Expand -r -F:* $MagicStick\magic\teams_26032.208.4399.5_x64.cab  "$env:Public\Yann\"
+    Expand -r -F:* $MagicStick\magic\windows_customize_machine_1.3.cab  "$env:Public\Yann\"
+    Expand -r -F:* $MagicStick\magic\Themes-customization_1.31.cab  "$env:Public\Yann\"
+    Expand-Archive -Force $MagicStick\magic\Office_365_apps_16.0.17928.20148_x64.zip  "$env:Public\Yann\Magic\Files\Packages\Office_365_apps_16.0.17928.20148_x64"
+    Set-Location -Path "$env:Public\Yann\magic";
     Write-Host "All Softwares are Prepared." -ForegroundColor Green
-    Write-Host 'Start-Process -FilePath "C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow'
-    Start-Process -FilePath "C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow
+    Write-Host 'Start-Process -FilePath "$env:Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow'
+    Start-Process -FilePath "$env:Public\Yann\magic\Invoke-AppDeployToolkit.exe" -Wait -NoNewWindow
     # for debug purpose
-    # C:\Users\Public\Yann\magic\Invoke-AppDeployToolkit.ps1
+    # $env:Public\Yann\magic\Invoke-AppDeployToolkit.ps1
 }
 # Copied Files from Usb Stick to Setup Folder
 
@@ -5066,7 +5462,7 @@ try {
         $ErrorActionPreference = 'Continue';
     }
 } 
-catch {} if ( !$StpFolderPath ) { Write-Host "Usb Disk not found!";return; $StpFolderPath = "C:\Users\Public\Yann\post-setup"; } 
+catch {} if ( !$StpFolderPath ) { Write-Host "Usb Disk not found!";return; $StpFolderPath = "$env:Public\Yann\post-setup"; } 
             else { Write-Host "Post-Setup Files found at $StpFolderPath ";}
             cd $StpFolderPath ; return ;
             Write-Host 'Expand-Archive -Force "$postsetup" "C:\Windows\Setup\Files\post-setup"'
@@ -5141,7 +5537,7 @@ try {
     }
 } 
 catch {}
-if ( !$AppsFolderPath ) { Write-Host "Usb Disk not found!"; $AppsFolderPath = "C:\Users\Public\Yann\appx\"; } 
+if ( !$AppsFolderPath ) { Write-Host "Usb Disk not found!"; $AppsFolderPath = "$env:Public\Yann\appx\"; } 
 else { Write-Host "Packages found at $AppsFolderPath ";
     Add-AppxPackage -Path $AppsFolderPath\Microsoft.UI.Xaml.2.8_8.2501.31001.0_x64__8wekyb3d8bbwe.Appx | Out-Null
     Add-AppxPackage -Path $AppsFolderPath\Microsoft.UI.Xaml.x64.2.8.appx | Out-Null
@@ -5179,59 +5575,6 @@ else { Write-Host "Packages found at $AppsFolderPath ";
     }
 }
 
-function TeleMetry {
-
-    $MultilineComment = @"
-Windows Registry Editor Version 5.00
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection]
-"AllowTelemetry"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
-"DoNotShowFeedbackNotifications"=dword:00000001
-"LimitDiagnosticLogCollection"=dword:00000001
-"DisableDeviceDelete"=dword:00000000
-"DisableDiagnosticDataViewer"=dword:00000000
-"LimitDumpCollection"=dword:00000001
-"LimitEnhancedDiagnosticDataWindowsAnalytics"=dword:00000001
-"DisableTelemetryOptInSettingsUx"=dword:00000000
-"EnableOneSettingsAuditing"=dword:00000000
-"DisableTelemetryOptInChangeNotification"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Application-Experience/Program-Telemetry]
-"Enabled"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
-"AllowTelemetry"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
-"DoNotShowFeedbackNotifications"=dword:00000001
-
-[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Privacy]
-"TailoredExperiencesWithDiagnosticDataEnabled"=dword:00000000
-"@
-    Set-Content -Path "$env:TEMP\Optimize_TeleMetry.reg" -Value $MultilineComment -Force
-    Regedit.exe /S "$env:TEMP\Optimize_TeleMetry.reg"
-    
-    Write-Host "Recommended User Registry Settings Applied." -ForegroundColor Green
-
-	
-     Write-Host "Applying Recommended Telemetry Settings . . ."
-    # Registry modifications
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DoNotShowFeedbackNotifications /t REG_DWORD /d 1 /f 2>&1
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDiagnosticLogCollection /t REG_DWORD /d 1 /f 2>&1
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableDeviceDelete /t REG_DWORD /d 0 /f 2>&1
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableDiagnosticDataViewer /t REG_DWORD /d 0 /f 2>&1 
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitDumpCollection /t REG_DWORD /d 1 /f 2>&1
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v LimitEnhancedDiagnosticDataWindowsAnalytics /t REG_DWORD /d 1 /f 2>&1 
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableTelemetryOptInSettingsUx /t REG_DWORD /d 0 /f 2>&1 
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v EnableOneSettingsAuditing /t REG_DWORD /d 0 /f 2>&1 
-    cmd.exe /c reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection /v DisableTelemetryOptInChangeNotification /t REG_DWORD /d 0 /f 2>&1 
-    cmd.exe /c reg.exe add HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry /v DisableTelemetry /t REG_DWORD /d 1 /f 2>&1
-    cmd.exe /c reg.exe add HKCU\SOFTWARE\Microsoft\Office\16.0\Common\ClientTelemetry /v VerboseLogging /t REG_DWORD /d 0 /f 2>&1
-    Write-Host "Recommended Telemetry Settings Applied." -ForegroundColor Green
-}
-
 # Clears Copilot
 function GetCopilotOut {
     Write-Host "Applying AI Removal Registry Settings . . ."
@@ -5256,7 +5599,7 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\Copilot]
 "CopilotDisabledReason"="FeatureIsDisabled"
 "IsCopilotAvailable"=dword:00000000
-"CopilotLogonTelemetryTime"=hex:cf,e7,df,41,50,b6,dc,01
+"CopilotLogonTelemetryTime"=-
 
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\Copilot\BingChat]
 "IsUserEligible"=dword:00000000
@@ -5423,6 +5766,69 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Microsoft.Copilot_8wekyb3d8bbwe]
 "RemovePackage"=dword:00000001
 
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\Common]
+"QMEnable"=dword:00000000
+"LinkedIn"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\Common\Feedback]
+"SurveyEnabled"=dword:00000000
+"IncludeEmail"=dword:00000000
+"Enabled"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\osm]
+"Enablelogging"=dword:00000001
+"EnableUpload"=dword:00000001
+"EnableFileObfuscation"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\Common]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\Common\ClientTelemetry]
+"DisableTelemetry"=dword:00000001
+"SendTelemetry"=dword:00000003
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\general]
+"disabletraining"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\specific]
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\ai\training\specific\adaptivefloatie]
+"disabletrainingofadaptivefloatie"=dword:
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\feedback]
+"enabled"=dword:00000000
+"surveyenabled"=dword:00000000
+"includeemail"=dword:00000000
+"feedbackincludelog"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\common\privacy]
+"usercontentdisabled"=dword:00000002
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\osm]
+"enablelogging"=dword:00000000
+"enablefileobfuscation"=dword:00000001
+"enableupload"=dword:00000000
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\osm\preventedapplications]
+"wdsolution"=dword:00000001
+"xlsolution"=dword:00000001
+"pptsolution"=dword:00000001
+"olksolution"=dword:00000001
+"accesssolution"=dword:00000001
+"projectsolution"=dword:00000001
+"publishersolution"=dword:00000001
+"visiosolution"=dword:00000001
+"onenotesolution"=dword:00000001
+
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Office\16.0\osm\preventedsolutiontypes]
+"documentfiles"=dword:00000001
+"templatefiles"=dword:00000001
+"comaddins"=dword:00000001
+"appaddins"=dword:00000001
+"agave"=dword:00000001
+
 "@
     Set-Content -Path "$env:TEMP\Copilot_Removal_Registry.reg" -Value $MultilineComment -Force
     # edit reg file
@@ -5438,14 +5844,14 @@ function SetCopilotOut {
     subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall  /grant=ADMINISTRATORS=f | Out-Null
     # apps folder
     icacls $env:Systemroot\SystemApps /setowner ADMINISTRATORS /T /C /Q | Out-Null
-    icacls $env:Systemroot\SystemApps /GRANT:r ADMINISTRATORS:F /T /C /Q | Out-Null
+    icacls $env:Systemroot\SystemApps /GRANT:r $env:Username:F /T /C /Q | Out-Null
     Write-Host "Permissions Granted."   -ForegroundColor Green
     Get-ScheduledTask -TaskPath "*Recall*" | Disable-ScheduledTask
     # Stops AI Services
     Start-Process cmd -ArgumentList '/s,/c,net stop WSAIFabricSvc' -Verb runAs
     Write-Host "AI Services Stopped." -ForegroundColor Green
-    icacls "$env:Systemroot\System32\Tasks\Microsoft\Windows\WindowsAI" /GRANT:r ADMINISTRATORS:F /T /C /Q | Out-Null
-    icacls "$env:Systemroot\SystemApps" /GRANT:r ADMINISTRATORS:F /T /C /Q | Out-Null
+    icacls "$env:Systemroot\System32\Tasks\Microsoft\Windows\WindowsAI" /GRANT:r $env:Username:F /T /C /Q | Out-Null
+    icacls "$env:Systemroot\SystemApps" /GRANT:r $env:Username:F /T /C /Q | Out-Null
     Remove-Item "$env:Systemroot\System32\Tasks\Microsoft\Windows\WindowsAI" -Recurse -Force | Out-Null
     $initConfigID = Get-ItemPropertyValue -Path "HKEY_LOCAL_MACHINE:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall\InitialConfiguration" -Name 'Id'
     $policyConfigID = Get-ItemPropertyValue -Path "HKEY_LOCAL_MACHINE:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI\Recall\PolicyConfiguration" -Name 'Id' 
@@ -5504,7 +5910,6 @@ function SetCopilotOut {
                                         Write-Host "AI Packages Erased." -ForegroundColor Green
 }
 # End of Copilot removal
-
 # Clears All AI Packages
 function set-AIout {
 $aipackages = @(
@@ -5606,12 +6011,15 @@ function OptimizeNvme {
 function Set-Permsys {
     subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\ /grant=SYSTEM=f | Out-Null
     subinacl /subkeyreg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\Microsoft\Windows\WindowsAI  /grant=SYSTEM=f | Out-Null
+    takeown /f $env:Systemroot\System32\Tasks\Microsoft\Windows /a /r /D:J 2>&1 | Out-Null
     icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\* /GRANT:r SYSTEM:F /T /C /Q | Out-Null
     icacls $env:Systemroot\System32\Tasks\Microsoft\Windows\* /setowner "NT SERVICE\TrustedInstaller" /T /C /Q | Out-Null
     # public folders
+    takeown /f $env:Public /a /r /D:J 2>&1 | Out-Null
     icacls $env:Public /GRANT:r SYSTEM:F /T /C /Q | Out-Null
     icacls $env:Public /setowner "NT SERVICE\TrustedInstaller" /T /C /Q | Out-Null
     # Wallpaper folders
+        takeown /f $env:Public /a /r /D:J 2>&1 | Out-Null
     icacls $env:Systemroot\Web\ /GRANT:r SYSTEM:F /T /C /Q | Out-Null
     icacls $env:Systemroot\Web\ /setowner "NT SERVICE\TrustedInstaller" /T /C /Q | Out-Null
     # apps folder
@@ -5620,29 +6028,174 @@ function Set-Permsys {
     Write-Host "Permissions cleaned."   -ForegroundColor Green
 }
 
+# function to optimize network
+function NetOptimize {
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+function Write-Step {
+    param([string]$Message)
+    Write-Host "`n>> $Message" -ForegroundColor Cyan
+}
+
+function Write-Skip {
+    param([string]$Message)
+    Write-Host "   SKIPPED: $Message" -ForegroundColor DarkGray
+}
+
+# ---------------------------------------------
+# SECTION 1 - TCP Global Settings (netsh)
+# These apply on Windows 10/11 and have measurable effect.
+# ---------------------------------------------
+
+Write-Step "Setting congestion provider."
+# CTCP (Compound TCP) can improve throughput on higher-latency links.
+# Alternative: bbr2 is theoretically better but has known bugs on Windows
+# and may break VPN/proxy tools. Stick with ctcp unless you want to experiment.
+# To try BBR2: netsh int tcp set supplemental template=internet congestionprovider=bbr2
+netsh int tcp set supplemental template=internet congestionprovider=ctcp | Out-Null
+
+Write-Step "Disabling TCP timestamps."
+# Reduces per-packet overhead. Minor latency benefit on LAN/low-latency links.
+netsh int tcp set global timestamps=Disabled | Out-Null
+
+Write-Step "Setting initial Retransmission Timeout (RTO) to 300ms."
+# Default is 1000ms. 300ms is the minimum and benefits low-latency connections
+# by retrying faster on packet loss without waiting a full second.
+netsh int tcp set global initialRto=650 | Out-Null
+
+Write-Step "Enabling Receive Segment Coalescing (RSC) globally."
+# RSC batches incoming segments to reduce CPU load, but adds latency.
+# Disable for lower latency; re-enable if you prioritize throughput over latency.
+netsh int tcp set global rsc=enabled | Out-Null
+
+Write-Step "Enabling RSS and Direct Cache Access (DCA) globally."
+# RSS (Receive-Side Scaling) spreads network processing across CPU cores.
+# DCA (Direct Cache Access) can reduce memory latency - requires hardware support
+# (Intel VT-d / DCA-capable NIC). Safe to enable; silently ignored if unsupported.
+netsh int tcp set global rss=enabled dca=enabled | Out-Null
+
+Write-Step "Enabling Non-SACK RTT Resiliency globally."
+# there are unnecessary retransmits on modern networks where SACK is standard.
+netsh int tcp set global nonsackrttresiliency=enabled | Out-Null
+
+Write-Step "Setting maximum SYN retransmissions to 2."
+# Default is 4. Reduces the time spent waiting for a response from a dead host.
+netsh int tcp set global maxsynretransmissions=2 | Out-Null
+
+# ---------------------------------------------
+# SECTION 2 - Dynamic Port Range
+# ---------------------------------------------
+
+Write-Step "Setting dynamic port range (IPv4 and IPv6)."
+# Expands the ephemeral port pool. Useful under heavy connection load.
+# Start at 10000 with 55534 ports (up to 65534) for maximum range.
+netsh int ipv4 set dynamicport tcp start=10000 num=55534 | Out-Null
+netsh int ipv6 set dynamicport tcp start=10000 num=55534 | Out-Null
+
+# ---------------------------------------------
+# SECTION 3 - Network Adapter Offload Settings
+# ---------------------------------------------
+
+Write-Step "Disabling TCP Chimney Offload globally."
+# TCP Chimney is deprecated and disabled by default in modern Windows.
+# Explicitly disabling it ensures no legacy path activates it.
+Set-NetOffloadGlobalSetting -Chimney Disabled | Out-Null
+
+Write-Step "Enabling Checksum Offload on all network adapters."
+# Offloads checksum computation to the NIC, reducing CPU overhead.
+Enable-NetAdapterChecksumOffload -Name * -ErrorAction SilentlyContinue | Out-Null
+
+Write-Step "Enabling Receive-Side Scaling (RSS) on all network adapters."
+Enable-NetAdapterRss -Name * -ErrorAction SilentlyContinue | Out-Null
+
+Write-Step "Disabling Receive Segment Coalescing (RSC) on all network adapters."
+# Per-adapter RSC disable to match the global setting above.
+Enable-NetAdapterRsc -Name * -ErrorAction SilentlyContinue | Out-Null
+
+Write-Step "Disabling Large Send Offload (LSO) on all network adapters."
+# LSO can introduce latency spikes by batching large sends. Disable for
+# more consistent low-latency behavior. Re-enable if throughput suffers.
+Enable-NetAdapterLso -Name * -ErrorAction SilentlyContinue | Out-Null
+
+Write-Step "Disabling Packet Coalescing Filter globally."
+enable-NetAdapterPacketDirect -Name * -ErrorAction SilentlyContinue | Out-Null
+Set-NetOffloadGlobalSetting -PacketCoalescingFilter Enabled | Out-Null
+
+# ---------------------------------------------
+# SECTION 4 - Registry: TCP/IP Parameters
+# ---------------------------------------------
+
+Write-Step "Setting TCP/IP registry parameters."
+
+# Standard TTL of 64 (Linux/macOS default). Reduces unnecessary router hops
+# before packet expiry. 128 is the Windows default - 64 is more RFC-standard.
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v DefaultTTL /d 64 /f | Out-Null
+
+# Maximizes the ephemeral port ceiling (65534 is the max valid port).
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v MaxUserPort /d 65534 /f | Out-Null
+
+# Reduces TIME_WAIT state from 240s default to 45s.
+# Frees up ports faster after connections close. Safe for client machines.
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v TcpTimedWaitDelay /d 45 /f | Out-Null
+
+# ---------------------------------------------
+# SECTION 5 - Registry: DNS Resolution Priority
+# ---------------------------------------------
+
+Write-Step "Setting DNS resolution priority order."
+# Lower number = higher priority. This order: local hosts file first,
+# then local (mDNS/NetBT), then DNS, then NetBT fallback.
+# Speeds up local hostname resolution and reduces unnecessary DNS queries.
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "LocalPriority"  /t REG_DWORD /d 4 /f | Out-Null
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "HostsPriority"  /t REG_DWORD /d 5 /f | Out-Null
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "DnsPriority"    /t REG_DWORD /d 6 /f | Out-Null
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "NetbtPriority"  /t REG_DWORD /d 7 /f | Out-Null
+
+# ---------------------------------------------
+# DONE
+# ---------------------------------------------
+
+Write-Host "`n---------------------------------------------" -ForegroundColor Green
+Write-Host "  Network optimization complete. Reboot recommended." -ForegroundColor Green
+Write-Host "---------------------------------------------" -ForegroundColor Green
+Write-Host ""
+Write-Host "  To verify TCP global settings after reboot:" -ForegroundColor Yellow
+Write-Host "    netsh int tcp show global" -ForegroundColor White
+Write-Host ""
+Write-Host "  To revert congestion provider to Windows default (Cubic):" -ForegroundColor Yellow
+Write-Host "    netsh int tcp set supplemental template=internet congestionprovider=default" -ForegroundColor White
+Write-Host ""
+netsh int tcp show global
+}
+
 # Function to Enable Windows Defender
 function Enable-WindowsDefender {
-
-
+    Set-Service -Name Sense -StartupType Manual
+    Set-Service -Name WdBoot -StartupType Boot
+    Set-Service -Name WdFilter -StartupType Boot
+    Set-Service -Name WdNisDrv -StartupType Manual
+    Set-Service -Name WdNisSvc -StartupType Manual
+    Set-Service -Name WinDefend -StartupType Automatic
 
     $MultilineComment = @"
 ; Enables Windows Defender to start in Windows Security
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\Sense]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Sense]
 "Start"=dword:00000003
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdBoot]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdBoot]
 "Start"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdFilter]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdFilter]
 "Start"=dword:00000000
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdNisDrv]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdNisDrv]
 "Start"=dword:00000003
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WdNisSvc]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WdNisSvc]
 "Start"=dword:00000003
 
-[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Services\WinDefend]
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\WinDefend]
 "Start"=dword:00000002
 
 [HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows Defender Security Center]
@@ -5689,16 +6242,16 @@ Disable-WindowsDefender
 TeleMetry
 #Set-CorporateSettings
 Set-HomeSettings
+Set-DefaultUserRegistry
+Set-DefaultHKLMRegistry
 Set-RecommendedPrivacySettings
 Set-RecommendedHKLMRegistry
 Set-RecommendedHKCURegistry
 Set-DefaultPowerSetting
-#Set-DefaultUserRegistry
-#Set-DefaultHKLMRegistry
 Set-PermAdm
 Spotlight
 GetCopilotOut
-# SetCopilotOut
+SetCopilotOut
 set-AIout
 Set-Wupdatecleaned
 Get-UsbStickDrive
@@ -5711,7 +6264,6 @@ OneDriveDskIcons
 # NOneDriveDskIcons
 CreateInstShortcut
 CreateAppshortcut
-CreateExpLus
 # MS-Logon
 # Local-Logon
 # NoDisplayUsr
@@ -5721,5 +6273,6 @@ CreateExpLus
 # OptimizeNvme
 Set-Permsys
 Enable-WindowsDefender
+
 Write-Host "Done; Please restart to apply changes"
 Stop-Transcript;
